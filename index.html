@@ -477,6 +477,33 @@
       line-height: 1.7;
     }
 
+    .linkbtn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      border: none;
+      color: #1F1E1C;
+      border-radius: 7px;
+      padding: 0.4rem 0.85rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.15s;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+      vertical-align: middle;
+    }
+    .linkbtn:hover { box-shadow: 0 2px 8px rgba(217, 119, 87, 0.3); }
+    .linkbtn:active { transform: translateY(1px); }
+    .step-hint {
+      display: block;
+      margin-top: 0.3rem;
+      font-size: 0.8rem;
+      color: var(--text-faint);
+      font-style: italic;
+    }
+
     button.ghost {
       background: var(--card);
       border: 1px solid var(--border);
@@ -555,9 +582,9 @@
     <section class="card">
       <div class="section-title"><span class="num">1</span>Fetch your usage</div>
       <ol class="steps">
-        <li>Open <code>claude.ai</code> (logged in) and press <kbd>F12</kbd> (or <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>I</kbd> on Mac). Switch to the <strong>Console</strong> tab.</li>
-        <li>Copy the snippet below, paste it into the console, and press <kbd>Enter</kbd>.</li>
-        <li>This page opens with your quota. <strong>Keep the claude.ai tab open</strong> — it pushes updates every 60 seconds.</li>
+        <li><strong>Open a linked claude.ai tab:</strong> <button type="button" class="linkbtn" id="openClaudeStep">Open claude.ai ↗</button><br><span class="step-hint">This ties the two tabs together so updates can push without stealing focus. Don't use an existing claude.ai tab — it won't be linked.</span></li>
+        <li>In that new tab, press <kbd>F12</kbd> (or <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>I</kbd> on Mac) and switch to the <strong>Console</strong> tab.</li>
+        <li>Copy the snippet below, paste it, and press <kbd>Enter</kbd>. Your quota will appear here and refresh every 60 seconds while the linked tab stays open.</li>
       </ol>
       <div class="snippet-box">
 <code id="snippetCode">loading…</code>
@@ -567,15 +594,21 @@
         Chrome may warn <em>"Don't paste code you don't understand."</em> That's expected for any DevTools paste. Read the snippet above, or expand <em>What does it do?</em> below.
       </div>
       <details>
-        <summary>What does it do? Is it safe?</summary>
+        <summary>Why do I have to open claude.ai from this page?</summary>
         <div>
-          The snippet reads your <code>lastActiveOrg</code> cookie (an organization ID, not a secret) and calls <code>claude.ai/api/organizations/&lt;org&gt;/usage</code> using your existing logged-in session — the same request claude.ai makes to render its sidebar widget. The first call opens this page with the data base64-encoded in the URL hash; subsequent calls (every 60s) push updates via <code>postMessage</code>. No data is sent to any third-party server. Your Claude session cookie never leaves claude.ai.
+          Browsers isolate tabs opened directly by the user (typing a URL, clicking a bookmark) into separate <em>browsing-context groups</em> for security. Cross-origin <code>postMessage</code> needs an explicit link between two tabs. When this page calls <code>window.open('https://claude.ai')</code>, the child inherits a <code>window.opener</code> reference back to this tab — which the snippet uses to push updates without stealing focus.
+        </div>
+      </details>
+      <details>
+        <summary>What does the snippet do? Is it safe?</summary>
+        <div>
+          The snippet reads your <code>lastActiveOrg</code> cookie (an organization ID, not a secret) and calls <code>claude.ai/api/organizations/&lt;org&gt;/usage</code> using your existing logged-in session — the same request claude.ai makes to render its sidebar widget. The response is sent to this page via <code>postMessage</code> (or URL hash on first contact). No data is sent to any third-party server. Your Claude session cookie never leaves claude.ai.
         </div>
       </details>
       <details>
         <summary>How do I stop the auto-refresh?</summary>
         <div>
-          Either close the claude.ai tab, or run <code>clearInterval(__cuw.iv)</code> in the same console where you started it. Reloading the claude.ai tab also stops it — you'd re-paste the snippet to resume.
+          Either close the claude.ai tab, or run <code>clearInterval(__cuw.iv)</code> in the same console where you started it. Reloading the claude.ai tab also stops it — you'd re-open via the button and re-paste to resume.
         </div>
       </details>
     </section>
@@ -592,7 +625,7 @@
     // Running the snippet a second time clears the old interval and restarts.
     function buildSnippetSource() {
       const site = location.origin + location.pathname.replace(/index\.html$/, '');
-      return `(async()=>{if(location.hostname!=='claude.ai'){alert('[Claude Usage] Run this on a claude.ai tab.');return;}let o;try{o=document.cookie.split('; ').find(r=>r.startsWith('lastActiveOrg='));}catch(e){alert('[Claude Usage] Cookie access denied. Run this on the main claude.ai tab.');return;}if(!o){alert('[Claude Usage] lastActiveOrg cookie not found. Please log in and try again.');return;}const org=o.split('=')[1];const SITE=${JSON.stringify(site)};const ORIGIN=new URL(SITE).origin;if(window.__cuw&&window.__cuw.iv)clearInterval(window.__cuw.iv);let win=window.__cuw?.win||null;const enc=(p)=>btoa(String.fromCharCode.apply(null,new TextEncoder().encode(JSON.stringify(p)))).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,'');const tick=async()=>{try{const r=await fetch('/api/organizations/'+org+'/usage',{credentials:'include',headers:{'accept':'application/json'}});if(!r.ok){console.warn('[Claude Usage] API',r.status);return;}const d=await r.json();const p={v:1,ts:Date.now(),data:d};if(!win||win.closed){win=window.open(SITE+'#d='+enc(p),'claude-usage-web');if(window.__cuw)window.__cuw.win=win;}else{win.postMessage({src:'claude-usage',payload:p},ORIGIN);}}catch(e){console.warn('[Claude Usage]',e);}};await tick();const iv=setInterval(tick,60000);window.__cuw={iv,win};console.log('[Claude Usage] Auto-refresh every 60s. Stop with: clearInterval(__cuw.iv)');})();`;
+      return `(async()=>{if(location.hostname!=='claude.ai'){alert('[Claude Usage] Run this on a claude.ai tab.');return;}let o;try{o=document.cookie.split('; ').find(r=>r.startsWith('lastActiveOrg='));}catch(e){alert('[Claude Usage] Cookie access denied. Run this on the main claude.ai tab.');return;}if(!o){alert('[Claude Usage] lastActiveOrg cookie not found. Please log in and try again.');return;}const org=o.split('=')[1];const SITE=${JSON.stringify(site)};const ORIGIN=new URL(SITE).origin;if(window.__cuw&&window.__cuw.iv)clearInterval(window.__cuw.iv);let win=window.__cuw?.win||null;const enc=(p)=>btoa(String.fromCharCode.apply(null,new TextEncoder().encode(JSON.stringify(p)))).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,'');const send=(p)=>{try{if(window.opener&&!window.opener.closed){window.opener.postMessage({src:'claude-usage',payload:p},ORIGIN);return'opener';}}catch(e){}try{if(win&&!win.closed){win.postMessage({src:'claude-usage',payload:p},ORIGIN);return'win';}}catch(e){}win=window.open(SITE+'#d='+enc(p),'claude-usage-web');if(window.__cuw)window.__cuw.win=win;return'open';};const tick=async()=>{try{const r=await fetch('/api/organizations/'+org+'/usage',{credentials:'include',headers:{'accept':'application/json'}});if(!r.ok){console.warn('[Claude Usage] HTTP',r.status);return;}const d=await r.json();const p={v:1,ts:Date.now(),data:d};const route=send(p);console.debug('[Claude Usage] push via',route,new Date(p.ts).toLocaleTimeString());}catch(e){console.warn('[Claude Usage] tick error:',e);}};await tick();const iv=setInterval(tick,60000);window.__cuw={iv,win};console.log('[Claude Usage] Auto-refresh every 60s. Stop: clearInterval(__cuw.iv)');if(!window.opener){console.warn('[Claude Usage] No opener — updates may open a new tab each minute. For smooth auto-refresh, open this claude.ai tab via the site\\'s \"Open claude.ai\" button.');}})();`;
     }
 
     function installSnippets() {
@@ -756,8 +789,16 @@
       }
     }
 
+    // The bottom-right "Open claude.ai" button uses noopener (no linking —
+    // user just wants to visit). The step-1 button below creates the linked
+    // child tab with an opener relationship.
     $('openClaudeBtn').addEventListener('click', () => {
       window.open('https://claude.ai/', '_blank', 'noopener');
+    });
+    $('openClaudeStep').addEventListener('click', () => {
+      // NO 'noopener' here — we WANT the child to see us as its opener,
+      // so its snippet can postMessage back to this tab.
+      window.open('https://claude.ai/', 'cuw-claude-tab');
     });
 
     window.addEventListener('hashchange', () => {
