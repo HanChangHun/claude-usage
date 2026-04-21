@@ -163,6 +163,65 @@
     }
     .updated-badge.pulse .dot { animation: live-pulse 1.2s ease-out; }
 
+    .widget-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .refresh-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.32rem 0.7rem;
+      background: var(--bg-warm);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 6px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.76rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
+    }
+    .refresh-btn:hover:not(:disabled) {
+      background: var(--card);
+      color: var(--text);
+      border-color: var(--text-faint);
+    }
+    .refresh-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .refresh-btn svg {
+      width: 12px;
+      height: 12px;
+      flex-shrink: 0;
+    }
+    .refresh-btn.spinning svg {
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .mini-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-left: 0.5rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+      vertical-align: middle;
+    }
+    .mini-toggle input {
+      accent-color: var(--accent);
+      cursor: pointer;
+      margin: 0;
+    }
+
     .widget {
       display: flex;
       flex-direction: column;
@@ -326,16 +385,16 @@
     }
     .steps li {
       counter-increment: step;
-      display: flex;
-      gap: 0.9rem;
-      align-items: flex-start;
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      column-gap: 0.9rem;
+      align-items: start;
       font-size: 0.92rem;
       color: var(--text-muted);
       line-height: 1.55;
     }
     .steps li::before {
       content: counter(step);
-      flex-shrink: 0;
       width: 22px; height: 22px;
       background: var(--bg-warm);
       color: var(--text-muted);
@@ -562,7 +621,13 @@
     <section class="card">
       <div class="widget-header">
         <div class="widget-title">Your quota</div>
-        <div class="updated-badge" id="updatedBadge"><span class="dot"></span><span id="updatedText">Not connected</span></div>
+        <div class="widget-actions">
+          <button class="refresh-btn" id="refreshBtn" disabled title="Open claude.ai and run the snippet to enable">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            <span>Refresh</span>
+          </button>
+          <div class="updated-badge" id="updatedBadge"><span class="dot"></span><span id="updatedText">Not connected</span></div>
+        </div>
       </div>
       <div class="widget" id="widget">
         <div class="empty" id="emptyState">
@@ -582,7 +647,7 @@
     <section class="card">
       <div class="section-title"><span class="num">1</span>Fetch your usage</div>
       <ol class="steps">
-        <li><strong>Open a linked claude.ai tab:</strong> <button type="button" class="linkbtn" id="openClaudeStep">Open claude.ai ↗</button><br><span class="step-hint">This ties the two tabs together so updates can push without stealing focus. Don't use an existing claude.ai tab — it won't be linked.</span></li>
+        <li><strong>Open a linked claude.ai tab:</strong> <button type="button" class="linkbtn" id="openClaudeStep">Open claude.ai ↗</button> <label class="mini-toggle" title="Open as a compact popup window you can move to another virtual desktop, monitor, or minimize out of the way."><input type="checkbox" id="miniMode"> mini window</label><br><span class="step-hint">This ties the two tabs together so updates can push without stealing focus. Don't use an existing claude.ai tab — it won't be linked.</span></li>
         <li>In that new tab, press <kbd>F12</kbd> (or <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>I</kbd> on Mac) and switch to the <strong>Console</strong> tab.</li>
         <li>Copy the snippet below, paste it, and press <kbd>Enter</kbd>. Your quota will appear here and refresh every 60 seconds while the linked tab stays open.</li>
       </ol>
@@ -625,7 +690,7 @@
     // Running the snippet a second time clears the old interval and restarts.
     function buildSnippetSource() {
       const site = location.origin + location.pathname.replace(/index\.html$/, '');
-      return `(async()=>{if(location.hostname!=='claude.ai'){alert('[Claude Usage] Run this on a claude.ai tab.');return;}let o;try{o=document.cookie.split('; ').find(r=>r.startsWith('lastActiveOrg='));}catch(e){alert('[Claude Usage] Cookie access denied. Run this on the main claude.ai tab.');return;}if(!o){alert('[Claude Usage] lastActiveOrg cookie not found. Please log in and try again.');return;}const org=o.split('=')[1];const SITE=${JSON.stringify(site)};const ORIGIN=new URL(SITE).origin;if(window.__cuw&&window.__cuw.iv)clearInterval(window.__cuw.iv);let win=window.__cuw?.win||null;const enc=(p)=>btoa(String.fromCharCode.apply(null,new TextEncoder().encode(JSON.stringify(p)))).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,'');const send=(p)=>{try{if(window.opener&&!window.opener.closed){window.opener.postMessage({src:'claude-usage',payload:p},ORIGIN);return'opener';}}catch(e){}try{if(win&&!win.closed){win.postMessage({src:'claude-usage',payload:p},ORIGIN);return'win';}}catch(e){}win=window.open(SITE+'#d='+enc(p),'claude-usage-web');if(window.__cuw)window.__cuw.win=win;return'open';};const tick=async()=>{try{const r=await fetch('/api/organizations/'+org+'/usage',{credentials:'include',headers:{'accept':'application/json'}});if(!r.ok){console.warn('[Claude Usage] HTTP',r.status);return;}const d=await r.json();const p={v:1,ts:Date.now(),data:d};const route=send(p);console.log('[Claude Usage] push via',route,'at',new Date(p.ts).toLocaleTimeString());}catch(e){console.warn('[Claude Usage] tick error:',e);}};await tick();const iv=setInterval(tick,60000);window.__cuw={iv,win};console.log('[Claude Usage] Auto-refresh every 60s. Stop: clearInterval(__cuw.iv)');if(!window.opener){console.info('[Claude Usage] No opener detected — a dedicated tab will be opened for updates. This works fine, just uses a fresh tab instead of your existing site tab. To route into your existing site tab, relaunch claude.ai via the site\\'s \"Open claude.ai\" button.');}})();`;
+      return `(async()=>{if(location.hostname!=='claude.ai'){alert('[Claude Usage] Run this on a claude.ai tab.');return;}let o;try{o=document.cookie.split('; ').find(r=>r.startsWith('lastActiveOrg='));}catch(e){alert('[Claude Usage] Cookie access denied. Run this on the main claude.ai tab.');return;}if(!o){alert('[Claude Usage] lastActiveOrg cookie not found. Please log in and try again.');return;}const org=o.split('=')[1];const SITE=${JSON.stringify(site)};const ORIGIN=new URL(SITE).origin;if(window.__cuw){if(window.__cuw.iv)clearInterval(window.__cuw.iv);if(window.__cuw.onMsg)removeEventListener('message',window.__cuw.onMsg);}let win=window.__cuw?.win||null;const enc=(p)=>btoa(String.fromCharCode.apply(null,new TextEncoder().encode(JSON.stringify(p)))).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,'');const send=(p)=>{try{if(window.opener&&!window.opener.closed){window.opener.postMessage({src:'claude-usage',payload:p},ORIGIN);return'opener';}}catch(e){}try{if(win&&!win.closed){win.postMessage({src:'claude-usage',payload:p},ORIGIN);return'win';}}catch(e){}win=window.open(SITE+'#d='+enc(p),'claude-usage-web');if(window.__cuw)window.__cuw.win=win;return'open';};const tick=async()=>{try{const r=await fetch('/api/organizations/'+org+'/usage',{credentials:'include',headers:{'accept':'application/json'}});if(!r.ok){console.warn('[Claude Usage] HTTP',r.status);return;}const d=await r.json();const p={v:1,ts:Date.now(),data:d};const route=send(p);console.log('[Claude Usage] push via',route,'at',new Date(p.ts).toLocaleTimeString());}catch(e){console.warn('[Claude Usage] tick error:',e);}};const onMsg=(e)=>{if(e.origin!==ORIGIN)return;const m=e.data;if(m&&m.src==='claude-usage-web'&&m.cmd==='tick'){console.log('[Claude Usage] manual tick requested by viewer');tick();}};addEventListener('message',onMsg);await tick();const iv=setInterval(tick,60000);window.__cuw={iv,win,onMsg};console.log('[Claude Usage] Auto-refresh every 60s. Stop: clearInterval(__cuw.iv)');if(!window.opener){console.info('[Claude Usage] No opener detected — a dedicated tab will be opened for updates. This works fine, just uses a fresh tab instead of your existing site tab. To route into your existing site tab, relaunch claude.ai via the site\\'s \"Open claude.ai\" button.');}})();`;
     }
 
     function installSnippets() {
@@ -779,6 +844,9 @@
 
     // ---------- orchestration ----------
     let currentPayload = null;
+    let claudeSource = null;
+    let refreshTimeoutId = null;
+    const MINI_KEY = 'claude-usage-web:mini';
 
     function adoptPayload(payload, source) {
       currentPayload = payload;
@@ -789,6 +857,49 @@
       }
     }
 
+    function updateRefreshBtn() {
+      const btn = $('refreshBtn');
+      const ok = claudeSource && !claudeSource.closed;
+      if (!btn.classList.contains('spinning')) btn.disabled = !ok;
+      btn.title = ok
+        ? 'Fetch the latest usage from your claude.ai tab now.'
+        : 'Open claude.ai and run the snippet to enable.';
+    }
+
+    function stopSpinner() {
+      const btn = $('refreshBtn');
+      btn.classList.remove('spinning');
+      if (refreshTimeoutId) { clearTimeout(refreshTimeoutId); refreshTimeoutId = null; }
+      updateRefreshBtn();
+    }
+
+    $('refreshBtn').addEventListener('click', () => {
+      if (!claudeSource || claudeSource.closed) {
+        claudeSource = null;
+        updateRefreshBtn();
+        return;
+      }
+      try {
+        claudeSource.postMessage({ src: 'claude-usage-web', cmd: 'tick' }, 'https://claude.ai');
+      } catch (err) {
+        claudeSource = null;
+        updateRefreshBtn();
+        return;
+      }
+      const btn = $('refreshBtn');
+      btn.classList.add('spinning');
+      btn.disabled = true;
+      if (refreshTimeoutId) clearTimeout(refreshTimeoutId);
+      refreshTimeoutId = setTimeout(stopSpinner, 5000);
+    });
+
+    // Mini window toggle — persist preference.
+    const miniCheckbox = $('miniMode');
+    try { miniCheckbox.checked = localStorage.getItem(MINI_KEY) === '1'; } catch {}
+    miniCheckbox.addEventListener('change', () => {
+      try { localStorage.setItem(MINI_KEY, miniCheckbox.checked ? '1' : '0'); } catch {}
+    });
+
     // The bottom-right "Open claude.ai" button uses noopener (no linking —
     // user just wants to visit). The step-1 button below creates the linked
     // child tab with an opener relationship.
@@ -798,7 +909,10 @@
     $('openClaudeStep').addEventListener('click', () => {
       // NO 'noopener' here — we WANT the child to see us as its opener,
       // so its snippet can postMessage back to this tab.
-      window.open('https://claude.ai/', 'cuw-claude-tab');
+      // When mini is on, ask the browser for a popup window instead of a tab
+      // so the user can park it on another virtual desktop / monitor.
+      const features = miniCheckbox.checked ? 'popup,width=480,height=360' : '';
+      window.open('https://claude.ai/', 'cuw-claude-tab', features);
     });
 
     window.addEventListener('hashchange', () => {
@@ -811,10 +925,21 @@
       if (e.origin !== 'https://claude.ai') return;
       const msg = e.data;
       if (msg && msg.src === 'claude-usage' && msg.payload && msg.payload.data) {
+        claudeSource = e.source;
+        stopSpinner();
         adoptPayload(msg.payload, 'postMessage');
         pulseLive();
       }
     });
+
+    // Periodically re-check the claude.ai window — if the user closed it,
+    // the refresh button should dim without waiting for a click.
+    setInterval(() => {
+      if (claudeSource && claudeSource.closed) {
+        claudeSource = null;
+        updateRefreshBtn();
+      }
+    }, 5000);
 
     function pulseLive() {
       const el = $('updatedBadge');

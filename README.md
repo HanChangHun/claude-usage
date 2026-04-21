@@ -18,6 +18,7 @@ Only a logged-in browser tab on `claude.ai` can call it (same-origin + session c
 2. On first run the snippet `window.open`s this page with the usage JSON base64-encoded in the URL hash.
 3. The snippet then runs every 60 seconds, pushing fresh data to this page via `postMessage` — no new tab, no focus theft.
 4. This page decodes each update, re-renders the widget, and caches the latest snapshot in `localStorage` so you see the last known values even if the claude.ai tab closes.
+5. The channel is two-way: the **Refresh** button on this page posts a `tick` command back to the claude.ai tab, which fetches immediately instead of waiting for the next 60-second tick.
 
 No backend. No extension. No API key. Your claude.ai session cookie never leaves `claude.ai`.
 
@@ -26,10 +27,12 @@ No backend. No extension. No API key. Your claude.ai session cookie never leaves
 ## Use
 
 1. Open [the page](https://hanchanghun.github.io/claude-usage-web/).
-2. Click **Copy** to copy the snippet.
-3. Open [claude.ai](https://claude.ai) in another tab (logged in). Press <kbd>F12</kbd> (or <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>I</kbd> on Mac) → **Console** tab.
-4. Paste the snippet and press <kbd>Enter</kbd>. If Chrome asks, type `allow pasting`.
-5. This page opens with your quota. Keep the claude.ai tab open — updates stream in automatically every minute.
+2. Click **Open claude.ai ↗** to launch a linked claude.ai tab. Tick **mini window** first if you'd like it to open as a compact popup window you can park on another virtual desktop, a second monitor, or minimized.
+3. In that new tab/window, press <kbd>F12</kbd> (or <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>I</kbd> on Mac) → **Console**.
+4. Back on this page, click **Copy** to copy the snippet, then paste it into the console and press <kbd>Enter</kbd>. If Chrome asks, type `allow pasting`.
+5. Your quota appears here and refreshes automatically every 60 seconds as long as the claude.ai tab/window stays open.
+
+**Refresh now:** click the **Refresh** button in the widget header to ask the claude.ai tab for an immediate update (it stays disabled until the snippet is running).
 
 **Stop auto-refresh** at any time: run `clearInterval(__cuw.iv)` in the same console, or just close the claude.ai tab. Reloading claude.ai also stops it; re-paste to resume.
 
@@ -44,6 +47,12 @@ No backend. No extension. No API key. Your claude.ai session cookie never leaves
 | Extra usage | `extra_usage.used_credits / monthly_limit` (if enabled) |
 
 Reset countdowns re-render locally every 30 s. A green dot + pulse animation marks every fresh push; the dot turns amber and the badge flips to "stale" after 10 minutes without an update.
+
+The **Refresh** button is enabled as soon as the first push arrives and goes disabled again if the claude.ai tab closes. While a manual refresh is in flight the icon spins; it clears on the next push or after a 5-second timeout if the claude.ai tab didn't respond (e.g. after a reload without re-pasting).
+
+### Mini window mode
+
+The **mini window** toggle next to the *Open claude.ai* button asks the browser to open claude.ai as a **compact popup window** (~480×360) instead of a regular tab. Chrome and Edge respect this hint reliably; from there you can drag the window to another virtual desktop (Windows: right-click the taskbar entry → *Move to desktop*; macOS: move to another Space), a second monitor, or just minimize it out of the way. Auto-refresh keeps working — Chrome throttles background/hidden windows, but 60-second intervals generally survive intact.
 
 ## Privacy
 
