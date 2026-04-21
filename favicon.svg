@@ -1,23 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#302b63"/>
-      <stop offset="1" stop-color="#0f0c29"/>
-    </linearGradient>
-    <linearGradient id="warm" x1="0" y1="1" x2="0" y2="0">
-      <stop offset="0" stop-color="#d97757"/>
-      <stop offset="1" stop-color="#f5b88f"/>
+    <linearGradient id="coral" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E8906F"/>
+      <stop offset="1" stop-color="#D97757"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
-  <!-- baseline -->
-  <line x1="12" y1="50" x2="52" y2="50" stroke="rgba(255,255,255,0.22)" stroke-width="1.2" stroke-linecap="round"/>
-  <!-- bars -->
-  <rect x="14" y="38" width="7" height="12" rx="1.8" fill="url(#warm)" opacity="0.55"/>
-  <rect x="24" y="28" width="7" height="22" rx="1.8" fill="url(#warm)" opacity="0.78"/>
-  <rect x="34" y="34" width="7" height="16" rx="1.8" fill="url(#warm)" opacity="0.68"/>
-  <rect x="44" y="20" width="7" height="30" rx="1.8" fill="url(#warm)"/>
-  <!-- spark -->
-  <polyline points="17.5,34 27.5,24 37.5,30 47.5,16" fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
-  <circle cx="47.5" cy="16" r="2.1" fill="#ffffff"/>
+  <rect width="64" height="64" rx="14" fill="#1F1E1C"/>
+  <rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#3A3532" stroke-width="1.2"/>
+  <!-- Claude-style four-pointed star -->
+  <path d="M32 9 C34.2 25 36 26.8 52 29 C36 31.2 34.2 33 32 49 C29.8 33 28 31.2 12 29 C28 26.8 29.8 25 32 9 Z"
+        fill="url(#coral)"/>
+  <!-- Small satellite star -->
+  <path d="M49 48 C49.6 51.4 50.2 52 53.6 52.6 C50.2 53.2 49.6 53.8 49 57.2 C48.4 53.8 47.8 53.2 44.4 52.6 C47.8 52 48.4 51.4 49 48 Z"
+        fill="url(#coral)" opacity="0.7"/>
 </svg>

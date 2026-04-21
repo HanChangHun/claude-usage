@@ -3,447 +3,596 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#1a1545">
+  <meta name="theme-color" content="#1F1E1C">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Claude Usage</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg:          #1F1E1C;
+      --bg-warm:     #2B2825;
+      --bg-sunk:     #1A1917;
+      --card:        #262421;
+      --border:      #3A3532;
+      --border-soft: #2F2B28;
+      --text:        #EAE5DC;
+      --text-muted:  #A59E91;
+      --text-faint:  #6F6B63;
+      --accent:      #D97757;
+      --accent-strong: #E8906F;
+      --accent-soft: #3A2A24;
+      --warn:        #E8A94D;
+      --warn-bg:     #2A2416;
+      --warn-border: #4A3F1F;
+      --warn-text:   #F1C07A;
+      --crit:        #E87373;
+      --ok:          #8FB159;
+      --shadow:      0 1px 2px rgba(0, 0, 0, 0.25), 0 4px 16px rgba(0, 0, 0, 0.15);
+      --shadow-lg:   0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 32px rgba(0, 0, 0, 0.25);
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
-      margin: 0; padding: 0;
+      margin: 0;
+      padding: 0;
       min-height: 100%;
-      overscroll-behavior: none;
-      -webkit-overflow-scrolling: touch;
+      background: var(--bg);
     }
 
     body {
       min-height: 100vh;
-      background: #1a1545;
-      color: #fff;
-      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-      padding: clamp(1.2rem, 3vh, 2.6rem) clamp(1rem, 3vw, 2rem) clamp(3rem, 6vh, 4rem);
-    }
-
-    .bg {
-      position: fixed;
-      top: -50px; left: -50px; right: -50px; bottom: -50px;
-      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-      z-index: -2;
-    }
-
-    .particles {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      pointer-events: none;
-      z-index: -1;
-    }
-    .particle {
-      position: absolute;
-      width: 3px; height: 3px;
-      background: rgba(255, 255, 255, 0.18);
-      border-radius: 50%;
-      animation: float linear infinite;
-    }
-    @keyframes float {
-      0%   { transform: translateY(100vh) scale(0); opacity: 0; }
-      10%  { opacity: 1; }
-      90%  { opacity: 1; }
-      100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      padding: clamp(1.5rem, 3vh, 3rem) clamp(1rem, 3vw, 2rem) clamp(3rem, 6vh, 4rem);
+      line-height: 1.5;
+      background:
+        radial-gradient(ellipse at top, rgba(217, 119, 87, 0.08) 0%, transparent 60%),
+        var(--bg);
     }
 
     .container {
-      max-width: min(94vw, 640px);
+      max-width: 640px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      align-items: stretch;
-      gap: clamp(0.9rem, 2vh, 1.4rem);
+      gap: clamp(1rem, 2vh, 1.3rem);
     }
 
+    /* ---------- Header ---------- */
     header {
       text-align: center;
-      padding-top: clamp(0.6rem, 2vh, 1.4rem);
+      padding: clamp(1rem, 3vh, 2.2rem) 0 clamp(0.5rem, 1vh, 0.8rem);
     }
-
-    .badge {
-      display: inline-block;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 20px;
-      padding: clamp(4px, 0.7vh, 8px) clamp(12px, 1.8vw, 20px);
-      font-size: clamp(0.65rem, 0.9vw, 0.78rem);
-      letter-spacing: 2px;
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.22em;
       text-transform: uppercase;
-      margin-bottom: clamp(0.7rem, 1.5vh, 1.2rem);
-      backdrop-filter: blur(10px);
-      color: rgba(230, 220, 255, 0.7);
-      transition: background 0.3s, border-color 0.3s, color 0.3s;
+      margin-bottom: 1rem;
     }
-    .badge[data-state="fresh"] {
-      background: rgba(217, 119, 87, 0.14);
-      border-color: rgba(217, 119, 87, 0.38);
-      color: #f5c7a8;
+    .eyebrow .line {
+      width: 1.2rem;
+      height: 1px;
+      background: var(--accent);
+      opacity: 0.5;
     }
-    .badge[data-state="stale"] {
-      background: rgba(251, 191, 36, 0.1);
-      border-color: rgba(251, 191, 36, 0.3);
-      color: #fcd34d;
+    .eyebrow .star-mark {
+      width: 11px;
+      height: 11px;
+      color: var(--accent);
     }
 
     h1 {
-      font-size: clamp(2rem, 4vw, 3.2rem);
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      background: linear-gradient(to right, #d97757, #f5b88f, #fbbf24);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+      font-weight: 500;
+      font-size: clamp(2.4rem, 5.5vw, 3.6rem);
+      letter-spacing: -0.015em;
+      line-height: 1.02;
+      color: var(--text);
+      font-variation-settings: "opsz" 144, "SOFT" 50;
     }
     .sub {
-      margin-top: clamp(0.3rem, 0.7vh, 0.5rem);
-      font-size: clamp(0.78rem, 1vw, 0.9rem);
-      color: rgba(255, 255, 255, 0.45);
-      letter-spacing: 0.3px;
+      margin-top: 0.7rem;
+      font-size: clamp(0.9rem, 1vw, 0.98rem);
+      color: var(--text-muted);
+      max-width: 38ch;
+      margin-left: auto;
+      margin-right: auto;
     }
 
+    /* ---------- Card ---------- */
     .card {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: clamp(12px, 1.2vw, 18px);
-      backdrop-filter: blur(20px);
-      padding: clamp(1.1rem, 2.4vh, 1.8rem) clamp(1.2rem, 2vw, 1.8rem);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: clamp(1.3rem, 2.5vh, 1.8rem) clamp(1.3rem, 2.5vw, 1.8rem);
+      box-shadow: var(--shadow);
     }
+
+    /* ---------- Widget ---------- */
+    .widget-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.6rem;
+      margin-bottom: 1.1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .widget-title {
+      font-family: 'Fraunces', Georgia, serif;
+      font-weight: 500;
+      font-size: 1.15rem;
+      letter-spacing: -0.005em;
+      color: var(--text);
+      font-variation-settings: "opsz" 48, "SOFT" 50;
+    }
+    .updated-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      color: var(--text-faint);
+      font-variant-numeric: tabular-nums;
+    }
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--text-faint);
+    }
+    .updated-badge[data-state="fresh"] .dot { background: var(--ok); }
+    .updated-badge[data-state="fresh"] { color: var(--ok); }
+    .updated-badge[data-state="stale"] .dot { background: var(--warn); }
+    .updated-badge[data-state="stale"] { color: var(--warn); }
+    @keyframes live-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(107, 143, 63, 0.5); }
+      80% { box-shadow: 0 0 0 8px rgba(107, 143, 63, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(107, 143, 63, 0); }
+    }
+    .updated-badge.pulse .dot { animation: live-pulse 1.2s ease-out; }
 
     .widget {
       display: flex;
       flex-direction: column;
-      gap: clamp(0.9rem, 2vh, 1.3rem);
+      gap: 1.25rem;
     }
 
     .row {
       display: flex;
       flex-direction: column;
-      gap: 0.45rem;
+      gap: 0.5rem;
     }
-
     .row-head {
       display: flex;
       align-items: baseline;
-      gap: 0.6rem;
+      gap: 0.75rem;
       flex-wrap: wrap;
     }
-
     .row .label {
-      font-size: clamp(0.82rem, 1.05vw, 0.95rem);
-      color: rgba(255, 255, 255, 0.72);
+      font-size: 0.93rem;
       font-weight: 500;
-      flex-shrink: 0;
+      color: var(--text);
     }
-
     .row .pct {
-      font-size: clamp(0.82rem, 1.05vw, 0.95rem);
+      font-size: 0.92rem;
       font-weight: 600;
-      color: #f5b88f;
+      color: var(--accent);
       font-variant-numeric: tabular-nums;
     }
-    .row .pct.zero { color: rgba(255,255,255,0.35); }
-    .row .pct.warn { color: #fbbf24; }
-    .row .pct.crit { color: #f87171; }
+    .row .pct.zero { color: var(--text-faint); font-weight: 500; }
+    .row .pct.warn { color: var(--warn); }
+    .row .pct.crit { color: var(--crit); }
 
     .row .reset {
       margin-left: auto;
-      font-size: clamp(0.72rem, 0.9vw, 0.82rem);
-      color: rgba(255, 255, 255, 0.42);
-      font-variant-numeric: tabular-nums;
+      font-size: 0.78rem;
+      color: var(--text-faint);
       display: inline-flex;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.3rem;
+      font-variant-numeric: tabular-nums;
     }
-    .row .reset svg { width: 12px; height: 12px; opacity: 0.7; }
+    .row .reset svg { width: 11px; height: 11px; flex-shrink: 0; }
 
     .bar {
       height: 6px;
-      background: rgba(255, 255, 255, 0.06);
+      background: var(--bg-warm);
       border-radius: 999px;
       overflow: hidden;
-      position: relative;
     }
     .bar .fill {
       height: 100%;
-      background: linear-gradient(to right, #d97757, #f5b88f);
+      background: var(--accent);
       border-radius: 999px;
-      transition: width 0.5s ease;
-      min-width: 0;
+      transition: width 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
-    .bar .fill.warn { background: linear-gradient(to right, #f59e0b, #fbbf24); }
-    .bar .fill.crit { background: linear-gradient(to right, #dc2626, #f87171); }
-    .bar .fill.zero { background: rgba(255,255,255,0.12); }
+    .bar .fill.warn { background: var(--warn); }
+    .bar .fill.crit { background: var(--crit); }
+    .bar .fill.zero { background: var(--border); }
 
     .tier {
-      margin-top: 0.2rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: clamp(0.7rem, 0.9vw, 0.8rem);
-      color: rgba(255,255,255,0.4);
+      margin-top: 0.4rem;
+      padding-top: 1.1rem;
+      border-top: 1px solid var(--border-soft);
+      font-size: 0.87rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+    .tier .tier-label {
+      color: var(--text-faint);
     }
     .tier strong {
-      color: rgba(245, 184, 143, 0.9);
+      color: var(--accent);
       font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .tier .tier-of {
+      color: var(--text-faint);
+      font-variant-numeric: tabular-nums;
+      margin-left: auto;
     }
 
+    /* Empty state */
     .empty {
       text-align: center;
-      padding: clamp(1.2rem, 3vh, 2rem) 0.5rem;
+      padding: 1.4rem 0.5rem 0.6rem;
+    }
+    .empty .star {
+      width: 34px; height: 34px;
+      margin: 0 auto 1rem;
+      color: var(--accent);
+      opacity: 0.7;
     }
     .empty .big {
-      font-size: clamp(1rem, 1.3vw, 1.15rem);
-      color: rgba(255,255,255,0.7);
-      margin-bottom: 0.5rem;
+      font-family: 'Fraunces', serif;
+      font-weight: 500;
+      font-size: 1.12rem;
+      color: var(--text);
+      margin-bottom: 0.45rem;
+      font-variation-settings: "opsz" 48, "SOFT" 50;
     }
     .empty p {
-      font-size: clamp(0.78rem, 1vw, 0.88rem);
-      color: rgba(255,255,255,0.45);
-      line-height: 1.55;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      max-width: 34ch;
+      margin: 0 auto;
+      line-height: 1.6;
     }
 
-    .install-title {
-      font-size: clamp(0.72rem, 0.95vw, 0.85rem);
-      text-transform: uppercase;
-      letter-spacing: 2.2px;
-      color: rgba(255, 255, 255, 0.45);
-      margin-bottom: 0.9rem;
+    /* Refresh row */
+    .refresh-row {
+      margin-top: 1.1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-soft);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+    .refresh-row .hint {
+      font-size: 0.8rem;
+      color: var(--text-faint);
     }
 
-    .snippet-box {
-      position: relative;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      padding: 0.9rem 3.2rem 0.9rem 1rem;
-      font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
-      font-size: clamp(0.72rem, 0.9vw, 0.8rem);
-      color: rgba(255, 255, 255, 0.75);
-      line-height: 1.5;
-      overflow-x: auto;
-      white-space: pre;
-      margin-bottom: 0.8rem;
+    /* ---------- Snippet section ---------- */
+    .section-title {
+      font-family: 'Fraunces', Georgia, serif;
+      font-weight: 500;
+      font-size: 1.15rem;
+      color: var(--text);
+      margin-bottom: 1.1rem;
+      font-variation-settings: "opsz" 48, "SOFT" 50;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
     }
-    .snippet-box::-webkit-scrollbar { height: 6px; }
-    .snippet-box::-webkit-scrollbar-thumb {
-      background: rgba(255,255,255,0.2);
-      border-radius: 3px;
-    }
-
-    .copy-btn {
-      position: absolute;
-      top: 8px; right: 8px;
-      padding: 0.35rem 0.7rem;
-      background: rgba(217, 119, 87, 0.2);
-      border: 1px solid rgba(217, 119, 87, 0.4);
-      color: #f5c7a8;
-      border-radius: 8px;
-      font-family: inherit;
-      font-size: 0.75rem;
+    .section-title .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.6em;
+      height: 1.6em;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.78rem;
       font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.15s;
-    }
-    .copy-btn:hover { background: rgba(217, 119, 87, 0.35); }
-    .copy-btn.copied { background: rgba(74, 222, 128, 0.25); border-color: rgba(74, 222, 128, 0.5); color: #86efac; }
-
-    .warn-note {
-      margin-top: 0.7rem;
-      padding: 0.6rem 0.8rem;
-      background: rgba(251, 191, 36, 0.08);
-      border: 1px solid rgba(251, 191, 36, 0.25);
-      border-radius: 8px;
-      font-size: clamp(0.72rem, 0.92vw, 0.82rem);
-      color: rgba(252, 211, 77, 0.9);
-      line-height: 1.55;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border-radius: 50%;
     }
 
     .steps {
       list-style: none;
       counter-reset: step;
       padding: 0;
-      margin: 0;
+      margin: 0 0 1.2rem;
       display: flex;
       flex-direction: column;
-      gap: 0.7rem;
+      gap: 0.9rem;
     }
     .steps li {
       counter-increment: step;
       display: flex;
-      gap: 0.8rem;
+      gap: 0.9rem;
       align-items: flex-start;
-      font-size: clamp(0.82rem, 1.05vw, 0.93rem);
-      color: rgba(255,255,255,0.72);
-      line-height: 1.5;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.55;
     }
     .steps li::before {
       content: counter(step);
       flex-shrink: 0;
-      width: 24px; height: 24px;
-      background: rgba(217, 119, 87, 0.18);
-      border: 1px solid rgba(217, 119, 87, 0.35);
-      color: #f5c7a8;
+      width: 22px; height: 22px;
+      background: var(--bg-warm);
+      color: var(--text-muted);
       border-radius: 50%;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 600;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      margin-top: 2px;
+      margin-top: 1px;
+      letter-spacing: 0;
+      font-family: 'Inter', sans-serif;
     }
-    .steps code {
-      font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
-      background: rgba(255,255,255,0.08);
-      padding: 0.05em 0.4em;
+    .steps strong { color: var(--text); font-weight: 600; }
+
+    code {
+      font-family: 'SF Mono', ui-monospace, 'Menlo', 'Cascadia Mono', Consolas, monospace;
+      background: var(--bg-warm);
+      padding: 0.1em 0.42em;
       border-radius: 4px;
-      font-size: 0.92em;
-      color: rgba(255,255,255,0.85);
+      font-size: 0.87em;
+      color: var(--text);
     }
 
+    kbd {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-warm);
+      border: 1px solid var(--border);
+      box-shadow: inset 0 -1.5px 0 rgba(0, 0, 0, 0.35);
+      padding: 0.1em 0.48em;
+      border-radius: 4px;
+      font-size: 0.78em;
+      font-weight: 500;
+      color: var(--text);
+      min-width: 1.6em;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .snippet-box {
+      position: relative;
+      background: var(--bg-sunk);
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      padding: 0.95rem 5.2rem 0.95rem 1rem;
+      font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+      font-size: 0.76rem;
+      color: var(--text);
+      line-height: 1.55;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .snippet-box code {
+      background: transparent;
+      padding: 0;
+      border-radius: 0;
+      color: inherit;
+      font-size: inherit;
+    }
+    .snippet-box::-webkit-scrollbar { height: 6px; }
+    .snippet-box::-webkit-scrollbar-track { background: transparent; }
+    .snippet-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .copy-btn {
+      position: absolute;
+      top: 10px; right: 10px;
+      padding: 0.45rem 0.9rem;
+      background: var(--accent);
+      border: none;
+      color: #1F1E1C;
+      border-radius: 7px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    }
+    .copy-btn:hover {
+      background: var(--accent-strong);
+      box-shadow: 0 2px 8px rgba(217, 119, 87, 0.3);
+    }
+    .copy-btn:active { transform: translateY(1px); }
+    .copy-btn.copied {
+      background: var(--ok);
+      color: #1F1E1C;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .warn-note {
+      margin-top: 1rem;
+      padding: 0.75rem 0.95rem;
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      border-left: 3px solid var(--warn);
+      border-radius: 8px;
+      font-size: 0.83rem;
+      color: var(--warn-text);
+      line-height: 1.55;
+    }
+    .warn-note em { font-style: italic; color: inherit; }
+
     details {
-      margin-top: 0.9rem;
-      font-size: clamp(0.75rem, 0.95vw, 0.85rem);
-      color: rgba(255,255,255,0.5);
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-soft);
+      font-size: 0.88rem;
+      color: var(--text-muted);
     }
     details summary {
       cursor: pointer;
       user-select: none;
-      padding: 0.3rem 0;
+      padding: 0.2rem 0;
+      font-weight: 500;
+      color: var(--text);
       transition: color 0.2s;
+      list-style: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
     }
-    details summary:hover { color: rgba(255,255,255,0.8); }
+    details summary::-webkit-details-marker { display: none; }
+    details summary::before {
+      content: "+";
+      display: inline-block;
+      width: 1em;
+      text-align: center;
+      color: var(--accent);
+      font-weight: 400;
+      font-size: 1.1em;
+      transition: transform 0.2s;
+    }
+    details[open] summary::before { content: "−"; }
+    details summary:hover { color: var(--accent-strong); }
     details > *:not(summary) {
-      margin-top: 0.5rem;
-      padding: 0.6rem 0.8rem;
-      background: rgba(0,0,0,0.2);
-      border-radius: 8px;
-      line-height: 1.6;
+      margin-top: 0.7rem;
+      padding-left: 1.5em;
+      line-height: 1.7;
     }
 
-    .refresh-row {
-      margin-top: 0.8rem;
-      display: flex;
-      gap: 0.6rem;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .updated {
-      font-size: clamp(0.72rem, 0.9vw, 0.8rem);
-      color: rgba(255,255,255,0.4);
-    }
     button.ghost {
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      color: rgba(255, 255, 255, 0.6);
-      border-radius: 10px;
-      height: 2.4rem;
-      padding: 0 1rem;
-      font-size: clamp(0.75rem, 0.95vw, 0.85rem);
-      font-family: inherit;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 8px;
+      padding: 0.55rem 1rem;
+      font-size: 0.85rem;
+      font-family: 'Inter', sans-serif;
       font-weight: 500;
       cursor: pointer;
-      transition: background 0.2s, border-color 0.2s, color 0.2s;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
     button.ghost:hover {
-      background-color: rgba(255, 255, 255, 0.06);
-      border-color: rgba(255, 255, 255, 0.3);
-      color: rgba(255, 255, 255, 0.9);
+      background: var(--bg-warm);
+      color: var(--text);
+      border-color: var(--text-faint);
     }
 
     .credit {
-      margin-top: clamp(1.2rem, 3vh, 2rem);
+      margin-top: clamp(1.8rem, 3.5vh, 2.8rem);
       text-align: center;
-      font-size: clamp(0.65rem, 0.8vw, 0.75rem);
-      color: rgba(255, 255, 255, 0.22);
-      letter-spacing: 0.5px;
+      font-size: 0.78rem;
+      color: var(--text-faint);
     }
     .credit a {
-      color: inherit;
+      color: var(--accent);
       text-decoration: none;
-      border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
-      transition: color 0.25s, border-color 0.25s;
+      font-weight: 500;
+      transition: color 0.15s;
     }
-    .credit a:hover {
-      color: rgba(255, 255, 255, 0.6);
-      border-color: rgba(255, 255, 255, 0.5);
-    }
+    .credit a:hover { color: var(--accent-strong); }
 
     .hidden { display: none !important; }
 
     @media (max-width: 480px) {
-      .row-head { gap: 0.4rem; }
-      .row .reset { margin-left: auto; }
+      .widget-header { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
+      .snippet-box { font-size: 0.72rem; padding-right: 4.8rem; }
     }
   </style>
 </head>
 <body>
-  <div class="bg"></div>
-  <div class="particles" id="particles"></div>
-
   <div class="container">
     <header>
-      <div class="badge" id="badge">NO DATA</div>
+      <div class="eyebrow">
+        <span class="line"></span>
+        <svg class="star-mark" viewBox="-12 -12 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M0 -11 C1.2 -3 3 -1.2 11 0 C3 1.2 1.2 3 0 11 C-1.2 3 -3 1.2 -11 0 C-3 -1.2 -1.2 -3 0 -11 Z"/>
+        </svg>
+        <span>Quota Mirror</span>
+        <span class="line"></span>
+      </div>
       <h1>Claude Usage</h1>
-      <p class="sub">Your live Claude.ai quota — session (5h), weekly, and per-model.</p>
+      <p class="sub">A live look at your Claude.ai limits — session (5h), weekly, and per-model.</p>
     </header>
 
     <section class="card">
+      <div class="widget-header">
+        <div class="widget-title">Your quota</div>
+        <div class="updated-badge" id="updatedBadge"><span class="dot"></span><span id="updatedText">Not connected</span></div>
+      </div>
       <div class="widget" id="widget">
         <div class="empty" id="emptyState">
-          <div class="big">No usage data yet.</div>
-          <p>Install the bookmarklet below and click it while on <code style="font-family:'SF Mono',monospace;background:rgba(255,255,255,0.06);padding:0.05em 0.4em;border-radius:4px;font-size:0.92em;">claude.ai</code>.</p>
+          <svg class="star" viewBox="-12 -12 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M0 -11 C1.2 -3 3 -1.2 11 0 C3 1.2 1.2 3 0 11 C-1.2 3 -3 1.2 -11 0 C-3 -1.2 -1.2 -3 0 -11 Z"/>
+          </svg>
+          <div class="big">No usage data yet</div>
+          <p>Run the snippet below on a <code>claude.ai</code> tab — your limits will appear here and refresh every minute.</p>
         </div>
       </div>
       <div class="refresh-row hidden" id="refreshRow">
-        <span class="updated" id="updatedAt">Updated just now</span>
-        <button class="ghost" id="openClaudeBtn">Refresh on claude.ai →</button>
+        <span class="hint">Updates automatically while the claude.ai tab is open.</span>
+        <button class="ghost" id="openClaudeBtn">Open claude.ai ↗</button>
       </div>
     </section>
 
     <section class="card">
-      <div class="install-title">Get your usage</div>
-
+      <div class="section-title"><span class="num">1</span>Fetch your usage</div>
       <ol class="steps">
-        <li>Open <code>claude.ai</code> (logged in) and press <code>F12</code> (or <code>Cmd⌥I</code> on Mac) to open DevTools. Switch to the <strong>Console</strong> tab.</li>
-        <li>Copy the snippet below and paste it into the console, then press <code>Enter</code>.</li>
-        <li>A tab opens/refocuses here with your live quota.</li>
+        <li>Open <code>claude.ai</code> (logged in) and press <kbd>F12</kbd> (or <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>I</kbd> on Mac). Switch to the <strong>Console</strong> tab.</li>
+        <li>Copy the snippet below, paste it into the console, and press <kbd>Enter</kbd>.</li>
+        <li>This page opens with your quota. <strong>Keep the claude.ai tab open</strong> — it pushes updates every 60 seconds.</li>
       </ol>
       <div class="snippet-box">
 <code id="snippetCode">loading…</code>
 <button class="copy-btn" id="copyBtn">Copy</button>
       </div>
       <div class="warn-note">
-        First time? Chrome warns "Don't paste code you don't understand." That's expected — read the snippet first (it's short) or expand "What does it do?" below.
+        Chrome may warn <em>"Don't paste code you don't understand."</em> That's expected for any DevTools paste. Read the snippet above, or expand <em>What does it do?</em> below.
       </div>
-
       <details>
         <summary>What does it do? Is it safe?</summary>
         <div>
-          The snippet reads your <code>lastActiveOrg</code> cookie value (an ID, not a secret) and calls <code>claude.ai/api/organizations/&lt;org&gt;/usage</code> using your existing logged-in session — exactly the same request claude.ai makes to render its own sidebar widget. The JSON response is base64-encoded into the URL hash of this page. Nothing is sent to any third-party server. Your Claude session cookie never leaves claude.ai.
+          The snippet reads your <code>lastActiveOrg</code> cookie (an organization ID, not a secret) and calls <code>claude.ai/api/organizations/&lt;org&gt;/usage</code> using your existing logged-in session — the same request claude.ai makes to render its sidebar widget. The first call opens this page with the data base64-encoded in the URL hash; subsequent calls (every 60s) push updates via <code>postMessage</code>. No data is sent to any third-party server. Your Claude session cookie never leaves claude.ai.
+        </div>
+      </details>
+      <details>
+        <summary>How do I stop the auto-refresh?</summary>
+        <div>
+          Either close the claude.ai tab, or run <code>clearInterval(__cuw.iv)</code> in the same console where you started it. Reloading the claude.ai tab also stops it — you'd re-paste the snippet to resume.
         </div>
       </details>
     </section>
   </div>
 
-  <p class="credit">by <a href="https://github.com/HanChangHun" target="_blank" rel="noopener">HanChangHun</a></p>
+  <p class="credit"><a href="https://github.com/HanChangHun/claude-usage-web" target="_blank" rel="noopener">Source on GitHub ↗</a></p>
 
   <script>
     const STORAGE_KEY = 'claude-usage-web:v2';
     const $ = (id) => document.getElementById(id);
 
     // ---------- snippet generation ----------
-    // Builds the async JS that fetches usage data and opens our site with it.
+    // Continuous variant: opens our site once, then postMessages updates every 60s.
+    // Running the snippet a second time clears the old interval and restarts.
     function buildSnippetSource() {
       const site = location.origin + location.pathname.replace(/index\.html$/, '');
-      return `(async()=>{try{if(location.hostname!=='claude.ai'){alert('[Claude Usage] claude.ai 탭에서 실행하세요.\\n현재: '+location.href);return;}let o;try{o=document.cookie.split('; ').find(r=>r.startsWith('lastActiveOrg='));}catch(e){alert('[Claude Usage] 쿠키 접근 불가.\\nclaude.ai 메인 탭에서 실행하세요.');return;}if(!o){alert('[Claude Usage] lastActiveOrg 쿠키를 찾지 못했습니다. 로그인 후 다시 시도하세요.');return;}const org=o.split('=')[1];const r=await fetch('/api/organizations/'+org+'/usage',{credentials:'include',headers:{'accept':'application/json'}});if(!r.ok){alert('[Claude Usage] API error '+r.status);return;}const d=await r.json();const p={v:1,ts:Date.now(),data:d};const j=JSON.stringify(p);const b=btoa(String.fromCharCode.apply(null,new TextEncoder().encode(j))).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,'');window.open(${JSON.stringify(site)}+'#d='+b,'claude-usage-web');}catch(e){alert('[Claude Usage] '+e.message);}})();`;
+      return `(async()=>{if(location.hostname!=='claude.ai'){alert('[Claude Usage] Run this on a claude.ai tab.');return;}let o;try{o=document.cookie.split('; ').find(r=>r.startsWith('lastActiveOrg='));}catch(e){alert('[Claude Usage] Cookie access denied. Run this on the main claude.ai tab.');return;}if(!o){alert('[Claude Usage] lastActiveOrg cookie not found. Please log in and try again.');return;}const org=o.split('=')[1];const SITE=${JSON.stringify(site)};const ORIGIN=new URL(SITE).origin;if(window.__cuw&&window.__cuw.iv)clearInterval(window.__cuw.iv);let win=window.__cuw?.win||null;const enc=(p)=>btoa(String.fromCharCode.apply(null,new TextEncoder().encode(JSON.stringify(p)))).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,'');const tick=async()=>{try{const r=await fetch('/api/organizations/'+org+'/usage',{credentials:'include',headers:{'accept':'application/json'}});if(!r.ok){console.warn('[Claude Usage] API',r.status);return;}const d=await r.json();const p={v:1,ts:Date.now(),data:d};if(!win||win.closed){win=window.open(SITE+'#d='+enc(p),'claude-usage-web');if(window.__cuw)window.__cuw.win=win;}else{win.postMessage({src:'claude-usage',payload:p},ORIGIN);}}catch(e){console.warn('[Claude Usage]',e);}};await tick();const iv=setInterval(tick,60000);window.__cuw={iv,win};console.log('[Claude Usage] Auto-refresh every 60s. Stop with: clearInterval(__cuw.iv)');})();`;
     }
 
     function installSnippets() {
@@ -456,14 +605,14 @@
         const text = $('snippetCode').textContent;
         try {
           await navigator.clipboard.writeText(text);
-          btn.textContent = 'Copied!';
+          btn.textContent = 'Copied';
           btn.classList.add('copied');
           setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1600);
         } catch {
           const r = document.createRange();
           r.selectNodeContents($('snippetCode'));
           const s = getSelection(); s.removeAllRanges(); s.addRange(r);
-          btn.textContent = 'Select+Cmd/Ctrl+C';
+          btn.textContent = '⌘/Ctrl+C';
         }
       });
     }
@@ -482,8 +631,7 @@
       const m = location.hash.match(/[#&]d=([A-Za-z0-9_\-]+)/);
       if (!m) return null;
       try {
-        const json = b64urlDecode(m[1]);
-        const payload = JSON.parse(json);
+        const payload = JSON.parse(b64urlDecode(m[1]));
         if (payload && payload.data && typeof payload.data === 'object') return payload;
       } catch (e) { console.warn('hash decode failed', e); }
       return null;
@@ -499,8 +647,8 @@
       return null;
     }
 
-    function saveStored(payload) {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(payload)); } catch {}
+    function saveStored(p) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); } catch {}
     }
 
     // ---------- formatting ----------
@@ -527,9 +675,7 @@
       return `Updated ${d}d ago`;
     }
 
-    function isStale(ts) {
-      return Date.now() - ts > 10 * 60_000;
-    }
+    function isStale(ts) { return Date.now() - ts > 10 * 60_000; }
 
     function pctClass(p) {
       if (p === 0) return 'zero';
@@ -540,14 +686,14 @@
 
     // ---------- rendering ----------
     const LIMIT_DEFS = [
-      { key: 'five_hour',       label: 'Session (5h)' },
-      { key: 'seven_day',       label: 'Weekly' },
-      { key: 'seven_day_opus',  label: 'Opus Weekly' },
-      { key: 'seven_day_sonnet', label: 'Sonnet Weekly' },
+      { key: 'five_hour',        label: 'Session (5h)' },
+      { key: 'seven_day',        label: 'Weekly' },
+      { key: 'seven_day_opus',   label: 'Opus weekly' },
+      { key: 'seven_day_sonnet', label: 'Sonnet weekly' },
     ];
 
     function clockIcon() {
-      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><polyline points="12 6.5 12 12 16 14"/></svg>`;
     }
 
     function renderRow(label, limit) {
@@ -559,7 +705,7 @@
           <div class="row-head">
             <span class="label">${label}</span>
             <span class="pct ${pCls}">${Math.round(pct)}%</span>
-            ${resetAt ? `<span class="reset" title="${new Date(resetAt).toLocaleString()}">${clockIcon()}<span data-reset="${resetAt}">${fmtUntil(resetAt)}</span></span>` : ''}
+            ${resetAt ? `<span class="reset" title="Resets at ${new Date(resetAt).toLocaleString()}">${clockIcon()}<span data-reset="${resetAt}">${fmtUntil(resetAt)}</span></span>` : ''}
           </div>
           <div class="bar"><div class="fill ${pCls}" style="width:${pct}%"></div></div>
         </div>`;
@@ -577,19 +723,14 @@
       if (data.extra_usage?.is_enabled) {
         const used = Number(data.extra_usage.used_credits) || 0;
         const lim = Number(data.extra_usage.monthly_limit) || 0;
-        const usedStr = '$' + (used / 100).toFixed(2);
-        const limStr = '$' + (lim / 100).toFixed(2);
-        extra = `<div class="tier">Extra usage: <strong>${usedStr}</strong> of ${limStr}</div>`;
+        extra = `<div class="tier"><span class="tier-label">Extra usage</span><strong>$${(used/100).toFixed(2)}</strong><span class="tier-of">of $${(lim/100).toFixed(2)}</span></div>`;
       }
-      if (rows.length === 0) {
-        widget.innerHTML = `<div class="empty"><div class="big">No limits reported.</div><p>The response didn't contain any quota fields. Try again, or verify you're logged into claude.ai.</p></div>`;
-      } else {
-        widget.innerHTML = rows.join('') + extra;
-      }
+      widget.innerHTML = rows.length === 0
+        ? `<div class="empty"><div class="big">No limits reported</div><p>The response didn't contain any quota fields. Try again, or verify you're logged into claude.ai.</p></div>`
+        : rows.join('') + extra;
       $('refreshRow').classList.remove('hidden');
-      $('updatedAt').textContent = fmtUpdated(ts);
-      $('badge').dataset.state = isStale(ts) ? 'stale' : 'fresh';
-      $('badge').textContent = isStale(ts) ? 'STALE' : 'LIVE';
+      $('updatedText').textContent = fmtUpdated(ts);
+      $('updatedBadge').dataset.state = isStale(ts) ? 'stale' : 'fresh';
     }
 
     function tickCountdowns() {
@@ -597,12 +738,9 @@
         const t = Number(el.dataset.reset);
         if (Number.isFinite(t)) el.textContent = fmtUntil(t);
       });
-      const payload = currentPayload;
-      if (payload) {
-        $('updatedAt').textContent = fmtUpdated(payload.ts);
-        const stale = isStale(payload.ts);
-        $('badge').dataset.state = stale ? 'stale' : 'fresh';
-        $('badge').textContent = stale ? 'STALE' : 'LIVE';
+      if (currentPayload) {
+        $('updatedText').textContent = fmtUpdated(currentPayload.ts);
+        $('updatedBadge').dataset.state = isStale(currentPayload.ts) ? 'stale' : 'fresh';
       }
     }
 
@@ -614,12 +752,10 @@
       saveStored(payload);
       renderWidget(payload);
       if (source === 'hash') {
-        // Clean URL without reload
         history.replaceState(null, '', location.pathname + location.search);
       }
     }
 
-    // ---------- events ----------
     $('openClaudeBtn').addEventListener('click', () => {
       window.open('https://claude.ai/', '_blank', 'noopener');
     });
@@ -629,21 +765,22 @@
       if (payload) adoptPayload(payload, 'hash');
     });
 
-    // ---------- particles ----------
-    (function createParticles() {
-      const container = $('particles');
-      const n = Math.min(40, Math.floor(window.innerWidth / 30));
-      for (let i = 0; i < n; i++) {
-        const p = document.createElement('div');
-        p.className = 'particle';
-        p.style.left = Math.random() * 100 + '%';
-        p.style.animationDuration = (7 + Math.random() * 11) + 's';
-        p.style.animationDelay = -(Math.random() * 18) + 's';
-        const size = (2 + Math.random() * 3);
-        p.style.width = p.style.height = size + 'px';
-        container.appendChild(p);
+    // Live updates from the continuous snippet running on claude.ai
+    window.addEventListener('message', (e) => {
+      if (e.origin !== 'https://claude.ai') return;
+      const msg = e.data;
+      if (msg && msg.src === 'claude-usage' && msg.payload && msg.payload.data) {
+        adoptPayload(msg.payload, 'postMessage');
+        pulseLive();
       }
-    })();
+    });
+
+    function pulseLive() {
+      const el = $('updatedBadge');
+      el.classList.remove('pulse');
+      void el.offsetWidth;
+      el.classList.add('pulse');
+    }
 
     // ---------- init ----------
     installSnippets();
