@@ -1,7 +1,7 @@
 {
   "name": "claude-usage-app",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.3.0",
   "type": "module",
   "scripts": {
     "tauri": "tauri",
@@ -12,6 +12,9 @@
     "@tauri-apps/cli": "^2"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2"
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-updater": "^2",
+    "@tauri-apps/plugin-dialog": "^2",
+    "@tauri-apps/plugin-process": "^2"
   }
 }

@@ -23,6 +23,9 @@
         <button class="icon-btn" id="refreshBtn" title="Refresh now" disabled>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
         </button>
+        <button class="icon-btn" id="settingsBtn" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
       </div>
     </header>
 
@@ -34,6 +37,24 @@
         <div class="empty-title">Setting up…</div>
         <p class="empty-msg" id="emptyMsg">Looking for your claude.ai session.</p>
         <button class="ghost-btn hidden" id="loginBtn">Sign in to claude.ai</button>
+      </div>
+    </section>
+
+    <section class="settings hidden" id="settingsPanel">
+      <div class="settings-row">
+        <label class="toggle">
+          <input type="checkbox" id="autostartToggle">
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">Start with Windows</span>
+        </label>
+      </div>
+      <div class="settings-row settings-actions">
+        <button class="settings-btn" id="signOutBtn">Sign out of claude.ai</button>
+        <button class="settings-btn" id="checkUpdateBtn">Check for updates</button>
+      </div>
+      <div class="settings-status hidden" id="settingsStatus"></div>
+      <div class="settings-meta">
+        <span id="versionLabel">v0.3.0</span>
       </div>
     </section>
 

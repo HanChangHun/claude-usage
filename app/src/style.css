@@ -251,6 +251,124 @@ html, body {
 .ghost-btn:hover { box-shadow: 0 2px 8px rgba(217, 119, 87, 0.3); }
 .ghost-btn:active { transform: translateY(1px); }
 
+/* ---------- Settings panel ---------- */
+.settings {
+  border-top: 1px solid var(--border-soft);
+  padding: 0.9rem 1rem 0.7rem;
+  background: rgba(38, 36, 33, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.84rem;
+  color: var(--text);
+}
+.toggle input { display: none; }
+.toggle-slider {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  background: var(--bg-warm);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  transition: background 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  background: var(--text-muted);
+  border-radius: 50%;
+  transition: left 0.2s, background 0.2s;
+}
+.toggle input:checked + .toggle-slider {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.toggle input:checked + .toggle-slider::after {
+  left: 16px;
+  background: #1F1E1C;
+}
+.toggle-label {
+  flex: 1;
+}
+
+.settings-actions {
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.settings-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 6px;
+  padding: 0.42rem 0.75rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
+}
+.settings-btn:hover:not(:disabled) {
+  background: var(--bg-warm);
+  color: var(--text);
+  border-color: var(--text-faint);
+}
+.settings-btn:disabled { opacity: 0.5; cursor: default; }
+.settings-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #1F1E1C;
+  font-weight: 600;
+}
+.settings-btn.primary:hover:not(:disabled) {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  color: #1F1E1C;
+}
+
+.settings-status {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  padding: 0.4rem 0.6rem;
+  background: var(--bg-warm);
+  border-radius: 6px;
+  border-left: 3px solid var(--accent);
+  line-height: 1.5;
+}
+.settings-status.error {
+  border-left-color: var(--crit);
+  color: var(--crit);
+}
+.settings-status.success {
+  border-left-color: var(--ok);
+  color: var(--ok);
+}
+
+.settings-meta {
+  font-size: 0.7rem;
+  color: var(--text-faint);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---------- Bottom bar ---------- */
 .bottombar {
   padding: 0.55rem 1rem;
