@@ -1,10 +1,11 @@
 use serde::Serialize;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::{
-    menu::{Menu, MenuItem},
+    menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder,
 };
+use tauri_plugin_autostart::ManagerExt;
 use url::Url;
 
 const CLAUDE_BASE: &str = "https://claude.ai/";
@@ -32,6 +33,10 @@ fn now_ms() -> i64 {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
         .setup(|app| {
             // ---- Main widget window ----
             let _main = WebviewWindowBuilder::new(
@@ -61,10 +66,35 @@ pub fn run() {
             let show_item = MenuItem::with_id(app, "show", "Show window", true, None::<&str>)?;
             let refresh_item =
                 MenuItem::with_id(app, "refresh", "Refresh now", true, None::<&str>)?;
-            let login_item =
-                MenuItem::with_id(app, "login", "Open claude.ai login", true, None::<&str>)?;
+            let sep1 = PredefinedMenuItem::separator(app)?;
+            let autostart_enabled = app
+                .autolaunch()
+                .is_enabled()
+                .unwrap_or(false);
+            let autostart_item = CheckMenuItem::with_id(
+                app,
+                "autostart",
+                "Start with Windows",
+                true,
+                autostart_enabled,
+                None::<&str>,
+            )?;
+            let signout_item =
+                MenuItem::with_id(app, "signout", "Sign out of claude.ai…", true, None::<&str>)?;
+            let sep2 = PredefinedMenuItem::separator(app)?;
             let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&show_item, &refresh_item, &login_item, &quit_item])?;
+            let menu = Menu::with_items(
+                app,
+                &[
+                    &show_item,
+                    &refresh_item,
+                    &sep1,
+                    &autostart_item,
+                    &signout_item,
+                    &sep2,
+                    &quit_item,
+                ],
+            )?;
 
             let _tray = TrayIconBuilder::with_id("main-tray")
                 .icon(app.default_window_icon().unwrap().clone())
@@ -74,7 +104,10 @@ pub fn run() {
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "show" => show_main(app),
                     "refresh" => trigger_fetch(app.clone()),
-                    "login" => show_claude_login(app),
+                    "autostart" => {
+                        let _ = toggle_autostart(app);
+                    }
+                    "signout" => sign_out(app.clone()),
                     "quit" => app.exit(0),
                     _ => {}
                 })
@@ -114,7 +147,13 @@ pub fn run() {
                 }
             }
         })
-        .invoke_handler(tauri::generate_handler![manual_refresh, open_login])
+        .invoke_handler(tauri::generate_handler![
+            manual_refresh,
+            open_login,
+            sign_out_cmd,
+            toggle_autostart_cmd,
+            is_autostart_enabled
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -127,6 +166,21 @@ async fn manual_refresh(app: AppHandle) {
 #[tauri::command]
 fn open_login(app: AppHandle) {
     show_claude_login(&app);
+}
+
+#[tauri::command]
+fn sign_out_cmd(app: AppHandle) {
+    sign_out(app);
+}
+
+#[tauri::command]
+fn toggle_autostart_cmd(app: AppHandle) -> bool {
+    toggle_autostart(&app)
+}
+
+#[tauri::command]
+fn is_autostart_enabled(app: AppHandle) -> bool {
+    app.autolaunch().is_enabled().unwrap_or(false)
 }
 
 fn show_main(app: &AppHandle) {
@@ -149,6 +203,55 @@ fn trigger_fetch(app: AppHandle) {
     tauri::async_runtime::spawn(async move {
         fetch_usage(&app).await;
     });
+}
+
+/// Toggle autostart and return the new state.
+fn toggle_autostart(app: &AppHandle) -> bool {
+    let manager = app.autolaunch();
+    let currently = manager.is_enabled().unwrap_or(false);
+    let _ = if currently {
+        manager.disable()
+    } else {
+        manager.enable()
+    };
+    manager.is_enabled().unwrap_or(false)
+}
+
+/// Sign out of claude.ai by clearing accessible cookies and navigating
+/// the embedded webview to the logout URL. The user can then sign in
+/// again with a different account, or close the window.
+fn sign_out(app: AppHandle) {
+    let Some(claude) = app.get_webview_window("claude") else {
+        return;
+    };
+    // Try to clear all non-HttpOnly cookies via JS, then navigate to /logout.
+    // The HttpOnly sessionKey cookie can only be cleared by the server via
+    // its logout response — that's why we hit /logout afterwards.
+    let _ = claude.eval(
+        r#"(function(){
+            try {
+                document.cookie.split(';').forEach(c => {
+                    const name = c.split('=')[0].trim();
+                    if (!name) return;
+                    const expire = 'Expires=Thu, 01 Jan 1970 00:00:00 GMT';
+                    document.cookie = `${name}=; Path=/; ${expire}`;
+                    document.cookie = `${name}=; Path=/; Domain=.claude.ai; ${expire}`;
+                    document.cookie = `${name}=; Path=/; Domain=claude.ai; ${expire}`;
+                });
+            } catch (e) {}
+            location.href = 'https://claude.ai/logout';
+        })();"#,
+    );
+    let _ = claude.show();
+    let _ = claude.unminimize();
+    let _ = claude.set_focus();
+    let _ = app.emit(
+        "status",
+        StatusEvent {
+            state: "logged_out".into(),
+            message: Some("Sign out requested. Use the claude.ai window to confirm.".into()),
+        },
+    );
 }
 
 async fn fetch_usage(app: &AppHandle) {
