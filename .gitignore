@@ -1,0 +1,15 @@
+# Claude Code session metadata, worktrees, and per-project state
+.claude/
+
+# Tauri / Rust build artifacts (the app/ subproject creates these)
+app/src-tauri/target/
+app/src-tauri/gen/
+app/node_modules/
+app/dist/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
