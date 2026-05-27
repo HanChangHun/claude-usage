@@ -6,16 +6,14 @@
 
 <img src="assets/favicon-512.png" width="180" alt="Claude Usage icon">
 
-[![Windows](https://img.shields.io/badge/Windows-10%2B-blue?style=flat-square)](https://www.microsoft.com/windows)
-[![Tauri](https://img.shields.io/badge/Tauri-2-FFC131?style=flat-square)](https://tauri.app)
-[![Rust](https://img.shields.io/badge/Rust-1.95%2B-orange?style=flat-square)](https://www.rust-lang.org)
-[![License](https://img.shields.io/badge/License-MIT-purple?style=flat-square)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/HanChangHun/claude-usage?style=flat-square)](https://github.com/HanChangHun/claude-usage/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/HanChangHun/claude-usage/total?style=flat-square)](https://github.com/HanChangHun/claude-usage/releases)
+[![Windows](https://img.shields.io/badge/Windows-10%2B-blue?style=for-the-badge)](https://www.microsoft.com/windows)
+[![Tauri](https://img.shields.io/badge/Tauri-2-FFC131?style=for-the-badge)](https://tauri.app)
+[![Rust](https://img.shields.io/badge/Rust-1.95%2B-orange?style=for-the-badge)](https://www.rust-lang.org)
+[![License](https://img.shields.io/badge/License-MIT-purple?style=for-the-badge)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/HanChangHun/claude-usage?style=for-the-badge)](https://github.com/HanChangHun/claude-usage/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/HanChangHun/claude-usage/total?style=for-the-badge)](https://github.com/HanChangHun/claude-usage/releases)
 
 **Your live Claude.ai quota — pinned to your Windows desktop.**
-
-✨ **Session • Weekly • Sonnet weekly • Opus weekly • Extra-usage** ✨
 
 [Features](#-features) • [Install](#-install-windows) • [How it works](#-how-it-works) • [Privacy](#-privacy--security) • [Build](#-building-from-source)
 
