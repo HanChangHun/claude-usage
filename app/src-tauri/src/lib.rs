@@ -1,4 +1,5 @@
 use serde::Serialize;
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::{
     menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem},
@@ -10,6 +11,13 @@ use url::Url;
 
 const CLAUDE_BASE: &str = "https://claude.ai/";
 const POLL_INTERVAL_SECS: u64 = 60;
+
+// Surface the claude.ai sign-in window only after this many consecutive
+// auth-looking failures. Avoids spurious pop-ups when WebView2 is still
+// loading on startup, or during transient network/401 blips.
+const LOGIN_FAIL_THRESHOLD: u32 = 2;
+
+struct LoginFailures(AtomicU32);
 
 #[derive(Serialize, Clone)]
 struct UsageEvent {
@@ -41,6 +49,8 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
         .setup(|app| {
+            app.manage(LoginFailures(AtomicU32::new(0)));
+
             // ---- Main widget window ----
             let _main = WebviewWindowBuilder::new(
                 app,
@@ -303,9 +313,15 @@ async fn fetch_usage(app: &AppHandle) {
         .map(|c| c.value().to_string());
 
     let Some(org_id) = org_value else {
-        // Not logged in — surface the claude.ai webview so the user can sign in
-        let _ = claude.show();
-        let _ = claude.set_focus();
+        // Could be a real sign-out, but also fires on startup before WebView2
+        // has loaded claude.ai or right after a webview reload. Only surface
+        // the sign-in window after several consecutive failures.
+        let fails = app.state::<LoginFailures>();
+        let count = fails.0.fetch_add(1, Ordering::SeqCst) + 1;
+        if count >= LOGIN_FAIL_THRESHOLD {
+            let _ = claude.show();
+            let _ = claude.set_focus();
+        }
         let _ = app.emit(
             "status",
             StatusEvent {
@@ -341,6 +357,7 @@ async fn fetch_usage(app: &AppHandle) {
             if status.is_success() {
                 match r.json::<serde_json::Value>().await {
                     Ok(json) => {
+                        app.state::<LoginFailures>().0.store(0, Ordering::SeqCst);
                         let _ = app.emit(
                             "usage-update",
                             UsageEvent {
@@ -367,8 +384,14 @@ async fn fetch_usage(app: &AppHandle) {
                     }
                 }
             } else if status == 401 || status == 403 {
-                let _ = claude.show();
-                let _ = claude.set_focus();
+                // Same gating as the no-cookie branch — a one-off 401/403 is
+                // usually a transient server hiccup, not a real sign-out.
+                let fails = app.state::<LoginFailures>();
+                let count = fails.0.fetch_add(1, Ordering::SeqCst) + 1;
+                if count >= LOGIN_FAIL_THRESHOLD {
+                    let _ = claude.show();
+                    let _ = claude.set_focus();
+                }
                 let _ = app.emit(
                     "status",
                     StatusEvent {
