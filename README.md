@@ -78,15 +78,18 @@ npm run tauri build        # release MSI in src-tauri/target/release/bundle/msi/
 
 Requires Rust 1.95+, Node 20+, Visual Studio Build Tools 2022 with the **Desktop development with C++** workload.
 
-To produce a release that the auto-updater can verify, set the signing key env vars before `tauri build`:
+To produce a release that the auto-updater can verify:
 
 ```powershell
-$env:TAURI_SIGNING_PRIVATE_KEY = (Get-Content $HOME\.tauri\claude-usage-app.key -Raw)
-$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = "<your password>"
-npm run tauri build
+# One-time setup
+cp app/.env.example app/.env   # then edit app/.env with your key path + password
+
+# Each release
+cd app
+.\release.ps1
 ```
 
-A `.msi.sig` file is generated alongside the MSI; both go into the GitHub release with a `latest.json` manifest pointing at the MSI.
+`release.ps1` reads `app/.env` (gitignored), runs `tauri build`, and copies the signed MSI + `.msi.sig` to `app/installers/`. Both files plus a hand-written `latest.json` (see `app/installers/latest.json` for the format) go into the GitHub release for that version tag.
 
 ## 📁 Layout
 

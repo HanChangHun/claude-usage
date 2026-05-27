@@ -10,6 +10,9 @@ app/dist/
 # Local copies of installers (binary, large; built via `npm run tauri build`)
 app/installers/
 
+# Local signing config (contains updater private key password — see app/.env.example)
+app/.env
+
 # OS / editor noise
 .DS_Store
 Thumbs.db
