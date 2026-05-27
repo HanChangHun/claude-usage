@@ -1,30 +1,65 @@
 # Claude Usage
 
-A small Windows desktop widget that shows your live **Claude.ai quota** — Session (5h), Weekly, Sonnet/Opus weekly, and any extra-usage balance — auto-refreshing every 60 seconds in the system tray.
+[English](README.md) | [한국어](docs/README.ko.md) | [简体中文](docs/README.zh-CN.md)
 
-[![Latest release](https://img.shields.io/github/v/release/HanChangHun/claude-usage)](https://github.com/HanChangHun/claude-usage/releases/latest)
-[![Landing page](https://img.shields.io/badge/site-hanchanghun.github.io%2Fclaude--usage-cc785c)](https://hanchanghun.github.io/claude-usage/)
+<div align="center">
+
+<img src="assets/favicon-512.png" width="180" alt="Claude Usage icon">
+
+[![Windows](https://img.shields.io/badge/Windows-10%2B-blue?style=flat-square)](https://www.microsoft.com/windows)
+[![Tauri](https://img.shields.io/badge/Tauri-2-FFC131?style=flat-square)](https://tauri.app)
+[![Rust](https://img.shields.io/badge/Rust-1.95%2B-orange?style=flat-square)](https://www.rust-lang.org)
+[![License](https://img.shields.io/badge/License-MIT-purple?style=flat-square)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/HanChangHun/claude-usage?style=flat-square)](https://github.com/HanChangHun/claude-usage/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/HanChangHun/claude-usage/total?style=flat-square)](https://github.com/HanChangHun/claude-usage/releases)
+
+**Your live Claude.ai quota — pinned to your Windows desktop.**
+
+✨ **Session • Weekly • Sonnet weekly • Opus weekly • Extra-usage** ✨
+
+[Features](#-features) • [Install](#-install-windows) • [How it works](#-how-it-works) • [Privacy](#-privacy--security) • [Build](#-building-from-source)
+
+</div>
+
+---
 
 ![Claude Usage desktop widget](assets/screenshot-desktop.png)
+
+## ✨ Features
+
+### 🎯 Core
+
+- **📊 Live Quota Display** — All four Claude.ai limits at a glance: Session (5h), Weekly, Sonnet weekly, Opus weekly, plus any extra-usage balance.
+- **⏱️ 60-Second Auto-Refresh** — Background loop polls quota every minute; reset countdowns shown next to each limit.
+- **🪟 Compact 440×420 Window** — Clean dark widget that stays out of the way.
+- **🎯 System Tray** — Left-click for window, right-click for menu. Hides from the taskbar when minimized.
+- **📦 Tiny Footprint** — ~5 MB MSI, ~50 MB runtime memory.
+
+### ⚙️ Settings Panel
+
+Gear icon, top right:
+
+- **🚀 Start with Windows** — Toggle autostart; the app sits silently in the tray after login.
+- **🔓 Sign out of claude.ai** — Clears the embedded webview session and re-prompts for login.
+- **🔄 Check for updates** — Manual trigger; otherwise checked automatically on startup.
+
+### 🛡️ Secure Auto-Update
+
+- **🔐 Ed25519 Signature Verification** — Every update is verified against an embedded public key before installing. Private key never leaves the maintainer's machine.
+- **📥 GitHub Releases Only** — Updater talks to one endpoint and nothing else.
+- **🎯 Silent Install** — After the first MSI install, future versions land on the next launch — no more re-installs.
 
 ---
 
 ## ⬇️ Install (Windows)
 
-Download the latest **MSI** from [Releases](https://github.com/HanChangHun/claude-usage/releases/latest), double-click, and you're done.
+1. Download the latest **MSI** from [Releases](https://github.com/HanChangHun/claude-usage/releases/latest).
+2. Double-click → **More info → Run anyway** (Windows SmartScreen will warn about an unknown publisher; the binary isn't code-signed).
+3. Done. The widget appears in your tray; sign in to claude.ai once when prompted.
 
-> Windows SmartScreen will warn about an unknown publisher (the binary isn't code-signed). Click **More info → Run anyway** to install.
+> After this single install, every future release self-applies via the in-app updater.
 
-After installing once, **future versions update themselves** — the in-app updater fetches signed releases from GitHub and applies them on the next launch (no more MSI re-installs).
-
-## ✨ What it does
-
-- A 440×420 main window with a clean dark widget showing all four limits + reset countdowns + extra-usage balance.
-- A **system tray icon** so you can park it out of the way; left-click to show the window, right-click for menu.
-- **Settings panel** (gear icon, top right):
-  - Toggle **Start with Windows** — registers the app to launch with the OS, sitting in the tray.
-  - **Sign out of claude.ai** — clears the in-app session and re-prompts for login.
-  - **Check for updates** — manual trigger; otherwise checked automatically on startup.
+---
 
 ## 🔧 How it works
 
@@ -34,7 +69,7 @@ Claude.ai has an internal endpoint that powers its own sidebar quota widget:
 GET https://claude.ai/api/organizations/<org_id>/usage
 ```
 
-Only a logged-in browser tab on `claude.ai` can call it (same-origin + session cookie). The desktop app embeds a **hidden WebView2 window** pointed at claude.ai (this is also where you sign in once). A Rust loop in the app:
+Only a logged-in browser tab on `claude.ai` can call it (same-origin + session cookie). The desktop app embeds a **hidden WebView2 window** pointed at claude.ai — this is also where you sign in once. A Rust loop in the app:
 
 1. Reads cookies from the embedded webview every 60 seconds (`Webview::cookies_for_url`).
 2. Extracts the `lastActiveOrg` cookie value.
@@ -42,29 +77,21 @@ Only a logged-in browser tab on `claude.ai` can call it (same-origin + session c
 4. Emits a Tauri event with the JSON response.
 5. The main window subscribes and re-renders the widget.
 
-If the cookies expire or the user signs out, the app surfaces the embedded webview so you can sign in again.
+If the cookies expire (two consecutive failures), the app surfaces the embedded webview so you can sign in again.
 
-**Auto-updates** are signed Ed25519 releases from this repo's GitHub Releases. The app verifies signatures against an embedded public key before applying any binary. Private signing key never leaves the maintainer's machine.
+**Stack**: Tauri 2 + Rust + WebView2 (system) + a tiny vanilla-JS frontend.
 
-**Stack**: Tauri 2 + Rust + WebView2 (system) + a tiny vanilla-JS frontend. Final MSI is ~5 MB; runtime memory ~50 MB.
+---
 
-## 🌐 Web fallback (no install)
+## 🔒 Privacy & Security
 
-A static, install-free version is also hosted at <https://hanchanghun.github.io/claude-usage/>. It's a fun mini variant: paste a one-line snippet into the claude.ai DevTools console and a separate site tab renders the same widget, refreshing every 60 s while the claude.ai tab stays open.
+- 🏠 **Local Only** — Your claude.ai session cookie stays inside the embedded webview (same trust boundary as a normal browser tab on claude.ai).
+- 🎯 **One Endpoint** — The only network request the app makes is the same `/api/organizations/<org>/usage` call claude.ai makes for itself.
+- 🔐 **Signed Updates** — The auto-updater talks to GitHub Releases and verifies signatures before applying any binary.
+- 🚫 **No Telemetry** — No analytics, no third-party services, no tracking.
+- 📖 **Open Source** — Code is fully public; audit anything you'd like.
 
-Useful when:
-- You're on someone else's computer and can't install
-- macOS / Linux user (the desktop build is Windows-only for now)
-- Just want to peek without setup
-
-For everyday use, the desktop app wins on every axis (no console paste, no second tab to babysit, autostart, tray icon, auto-update).
-
-## 🔒 Privacy
-
-- Your claude.ai session cookie stays inside the embedded webview (same trust boundary as a normal browser tab on claude.ai).
-- The only network request the app makes is the same `/api/organizations/<org>/usage` call claude.ai makes for itself.
-- The auto-updater talks to GitHub Releases and downloads signed MSI binaries; nothing else.
-- No analytics, no telemetry, no third-party services.
+---
 
 ## 🛠 Building from source
 
@@ -78,7 +105,7 @@ npm run tauri build        # release MSI in src-tauri/target/release/bundle/msi/
 
 Requires Rust 1.95+, Node 20+, Visual Studio Build Tools 2022 with the **Desktop development with C++** workload.
 
-To produce a release that the auto-updater can verify:
+### Cutting a signed release
 
 ```powershell
 # One-time setup
@@ -89,19 +116,9 @@ cd app
 .\release.ps1
 ```
 
-`release.ps1` reads `app/.env` (gitignored), runs `tauri build`, and copies the signed MSI + `.msi.sig` to `app/installers/`. Both files plus a hand-written `latest.json` (see `app/installers/latest.json` for the format) go into the GitHub release for that version tag.
+`release.ps1` reads `app/.env` (gitignored), runs `tauri build`, and copies the signed MSI + `.msi.sig` to `app/installers/`. Upload both files plus a hand-written `latest.json` (see `app/installers/latest.json` for the format) to the matching GitHub release tag.
 
-## 📁 Layout
-
-```
-claude-usage/
-├── index.html, style              # static landing page (web fallback lives here too)
-├── assets/                        # icons + screenshot
-├── app/                           # Tauri desktop app
-│   ├── src/                       # frontend (HTML/CSS/JS) — runs in WebView2
-│   └── src-tauri/                 # Rust + tauri.conf.json + capabilities
-└── LICENSE
-```
+---
 
 ## 📝 License
 
