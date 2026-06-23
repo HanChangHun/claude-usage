@@ -276,5 +276,18 @@ setInterval(tickCountdowns, 30_000);
 // Initial autostart state sync (without showing the panel)
 syncAutostartToggle();
 
+// Fill the settings-panel version label from the actual app version, so it
+// never goes stale on a version bump (one fewer place to keep in sync).
+(async () => {
+  try {
+    const appApi = window.__TAURI__.app;
+    if (appApi?.getVersion) {
+      const v = await appApi.getVersion();
+      const el = $('versionLabel');
+      if (el) el.textContent = `v${v}`;
+    }
+  } catch (e) { console.warn('version label failed', e); }
+})();
+
 // Silent update check on startup (delay 5s so the user sees their data first)
 setTimeout(() => checkForUpdates(false), 5000);
