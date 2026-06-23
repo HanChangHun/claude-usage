@@ -59,7 +59,7 @@ pub fn run() {
             )
             .title("Claude Usage")
             .inner_size(440.0, 420.0)
-            .min_inner_size(360.0, 320.0)
+            .min_inner_size(300.0, 320.0)
             .resizable(true)
             .visible(true)
             .build()?;
