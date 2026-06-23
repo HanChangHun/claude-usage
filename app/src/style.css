@@ -78,9 +78,11 @@ html, body {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-/* Drop the "updated" badge on narrow windows so the topbar never wraps */
+/* On narrow windows hide the "updated" text but KEEP the status dot, so the
+   topbar never wraps yet the fresh/stale/error indicator (and update pulse)
+   stays visible. */
 @media (max-width: 400px) {
-  .updated-badge { display: none; }
+  #updatedText { display: none; }
 }
 .dot {
   width: 6px; height: 6px;
