@@ -109,12 +109,12 @@ Requires Rust 1.95+, Node 20+, Visual Studio Build Tools 2022 with the **Desktop
 # One-time setup
 cp app/.env.example app/.env   # then edit app/.env with your key path + password
 
-# Each release
+# Each release (after bumping the version — see CLAUDE.md for the 4 files)
 cd app
-.\release.ps1
+.\release.ps1 -Notes "What changed in this release"
 ```
 
-`release.ps1` reads `app/.env` (gitignored), runs `tauri build`, and copies the signed MSI + `.msi.sig` to `app/installers/`. Upload both files plus a hand-written `latest.json` (see `app/installers/latest.json` for the format) to the matching GitHub release tag.
+`release.ps1` reads `app/.env` (gitignored), runs `tauri build`, copies the signed MSI + `.msi.sig` to `app/installers/`, and generates `app/installers/latest.json` automatically (signature included). Upload all three — MSI, `.msi.sig`, and `latest.json` — to the matching GitHub release tag. See [CLAUDE.md](CLAUDE.md#releasing) for the full step-by-step.
 
 ---
 
