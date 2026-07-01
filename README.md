@@ -15,6 +15,8 @@
 
 **Your live Claude.ai quota — pinned to your Windows desktop.**
 
+If this saves you a few quota checks, a GitHub star helps other Claude users find it.
+
 [Features](#-features) • [Install](#-install-windows) • [How it works](#-how-it-works) • [Privacy](#-privacy--security) • [Build](#-building-from-source)
 
 </div>
