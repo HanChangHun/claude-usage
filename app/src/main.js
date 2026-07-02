@@ -10,6 +10,7 @@ const processApi = window.__TAURI__.process;
 const $ = (id) => document.getElementById(id);
 
 let lastPayload = null;
+let statusState = null; // last backend status: null | 'logged_in' | 'logged_out' | 'error'
 let inFlightRefresh = false;
 let refreshTimeoutId = null;
 
@@ -57,6 +58,23 @@ const LIMIT_DEFS = [
   { key: 'seven_day_sonnet', label: 'Sonnet weekly' },
 ];
 
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// Labels for the `limits` array entries. Scoped entries carry the model name
+// (e.g. "Fable", "Opus") in scope.model.display_name, so new models show up
+// without a code change.
+function limitLabel(l) {
+  if (l.kind === 'session') return 'Session (5h)';
+  if (l.kind === 'weekly_all') return 'Weekly (all models)';
+  const scopeName = l.scope?.model?.display_name || l.scope?.surface?.display_name;
+  if (scopeName) return `${scopeName} weekly`;
+  if (l.group === 'weekly') return 'Weekly';
+  return l.kind || 'Limit';
+}
+
 function renderRow(label, limit) {
   const pct = Math.max(0, Math.min(100, Number(limit.utilization) || 0));
   const resetAt = limit.resets_at ? new Date(limit.resets_at).getTime() : null;
@@ -64,7 +82,7 @@ function renderRow(label, limit) {
   return `
     <div class="row">
       <div class="row-head">
-        <span class="label">${label}</span>
+        <span class="label">${esc(label)}</span>
         <span class="pct ${cls}">${Math.round(pct)}%</span>
         ${resetAt ? `<span class="reset" title="Resets at ${new Date(resetAt).toLocaleString()}">${clockIcon()}<span data-reset="${resetAt}">${fmtUntil(resetAt)}</span></span>` : ''}
       </div>
@@ -76,9 +94,17 @@ function renderWidget(payload) {
   const { data, ts } = payload;
   const widget = $('widget');
   const rows = [];
-  for (const def of LIMIT_DEFS) {
-    const v = data[def.key];
-    if (v && typeof v.utilization === 'number') rows.push(renderRow(def.label, v));
+  if (Array.isArray(data.limits) && data.limits.length > 0) {
+    for (const l of data.limits) {
+      if (!l || typeof l.percent !== 'number') continue;
+      rows.push(renderRow(limitLabel(l), { utilization: l.percent, resets_at: l.resets_at }));
+    }
+  } else {
+    // Legacy shape: top-level five_hour / seven_day / seven_day_* objects.
+    for (const def of LIMIT_DEFS) {
+      const v = data[def.key];
+      if (v && typeof v.utilization === 'number') rows.push(renderRow(def.label, v));
+    }
   }
   let extra = '';
   if (data.extra_usage?.is_enabled) {
@@ -108,7 +134,8 @@ function tickCountdowns() {
     const t = Number(el.dataset.reset);
     if (Number.isFinite(t)) el.textContent = fmtUntil(t);
   });
-  if (lastPayload) {
+  // Don't clobber an 'Error' / 'Not signed in' badge with 'Updated Xm ago'.
+  if (lastPayload && statusState !== 'error' && statusState !== 'logged_out') {
     $('updatedText').textContent = fmtUpdated(lastPayload.ts);
     $('updatedBadge').dataset.state = isStale(lastPayload.ts) ? 'stale' : 'fresh';
   }
@@ -116,6 +143,7 @@ function tickCountdowns() {
 
 function applyStatus(status) {
   if (!status) return;
+  statusState = status.state;
   if (status.state === 'logged_out') {
     if (!lastPayload) {
       $('emptyState')?.classList.remove('hidden');
@@ -202,6 +230,7 @@ async function checkForUpdates(userInitiated = false) {
 // ---------- event wiring ----------
 event.listen('usage-update', (e) => {
   lastPayload = e.payload;
+  statusState = null;
   renderWidget(lastPayload);
   pulseLive();
   inFlightRefresh = false;
@@ -269,6 +298,10 @@ $('signOutBtn').addEventListener('click', async () => {
 });
 
 $('checkUpdateBtn').addEventListener('click', () => checkForUpdates(true));
+
+$('kofiBtn').addEventListener('click', async () => {
+  try { await core.invoke('open_kofi'); } catch (e) { console.warn(e); }
+});
 
 // ---------- init ----------
 setInterval(tickCountdowns, 30_000);

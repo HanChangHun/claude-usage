@@ -15,6 +15,8 @@
 
 **实时显示 Claude.ai 配额 — 常驻 Windows 桌面。**
 
+如果它帮你省下了几次配额查询,欢迎点个 GitHub Star,让更多 Claude 用户发现它。
+
 [功能](#-功能) • [安装](#-安装-windows) • [工作原理](#-工作原理) • [隐私](#-隐私与安全) • [构建](#-从源码构建)
 
 </div>
@@ -27,10 +29,10 @@
 
 ### 🎯 核心
 
-- **📊 实时配额显示** — 一眼掌握 Claude.ai 所有限额：会话(5 小时)、每周、Sonnet 每周、Opus 每周,以及额外使用量余额。
+- **📊 实时配额显示** — 一眼掌握 claude.ai 报告的所有限额：会话(5 小时)、全模型每周限额、按模型的每周限额(Opus、Sonnet、Fable 等 — 新模型自动显示),以及额外使用量余额。
 - **⏱️ 60 秒自动刷新** — 后台循环每分钟轮询一次配额,每个限额旁边显示重置倒计时。
 - **🪟 紧凑的 440×420 窗口** — 简洁的深色小工具,不会占据桌面空间。
-- **🎯 系统托盘** — 左键点击打开窗口,右键点击显示菜单。最小化后从任务栏隐藏。
+- **🎯 系统托盘** — 左键点击打开窗口,右键点击显示菜单。关闭窗口时隐藏到托盘,程序不退出。
 - **📦 轻量** — MSI 约 5 MB,运行时内存约 50 MB。
 
 ### ⚙️ 设置面板
@@ -40,6 +42,7 @@
 - **🚀 开机自启** — 切换自动启动;登录后静静驻留托盘。
 - **🔓 退出 claude.ai** — 清除内嵌 WebView 会话,重新提示登录。
 - **🔄 检查更新** — 手动触发;否则启动时自动检查。
+- **☕ Ko-fi 赞助** — 如果这个小工具帮你省了时间,欢迎[请开发者喝杯咖啡](https://ko-fi.com/edgetpu)。
 
 ### 🛡️ 安全自动更新
 
@@ -109,12 +112,12 @@ npm run tauri build        # 发布 MSI (src-tauri/target/release/bundle/msi/)
 # 一次性设置
 cp app/.env.example app/.env   # 然后编辑 app/.env 填入你的密钥路径和密码
 
-# 每次发布
+# 每次发布(先更新版本号 — 参见 CLAUDE.md 中的 4 个文件)
 cd app
-.\release.ps1
+.\release.ps1 -Notes "本次发布的变更内容"
 ```
 
-`release.ps1` 读取 `app/.env`(已 gitignore),运行 `tauri build`,并将签名后的 MSI + `.msi.sig` 复制到 `app/installers/`。将这两个文件以及手写的 `latest.json`(格式参见 `app/installers/latest.json`)上传到对应版本标签的 GitHub release。
+`release.ps1` 读取 `app/.env`(已 gitignore),运行 `tauri build`,将签名后的 MSI + `.msi.sig` 复制到 `app/installers/`,并自动生成 `app/installers/latest.json`(含签名)。将 MSI、`.msi.sig` 和 `latest.json` 三个文件上传到对应版本标签的 GitHub release。完整步骤参见 [CLAUDE.md](../CLAUDE.md#releasing)。
 
 ---
 

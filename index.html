@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Claude Usage — desktop quota widget</title>
-  <meta name="description" content="A small Windows desktop widget showing your live Claude.ai quota — Session, Weekly, Sonnet/Opus weekly. Auto-refreshes every 60s in the system tray, auto-updates itself.">
+  <meta name="description" content="A small Windows desktop widget showing your live Claude.ai quota — session, weekly, and per-model weekly limits. Auto-refreshes every 60s in the system tray, auto-updates itself.">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=4">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png?v=4">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png?v=4">
@@ -565,7 +565,7 @@
       <h1>Claude Usage</h1>
       <p class="tagline">Live Claude.ai quota in your system tray. Auto-refreshing, auto-updating.</p>
       <a class="hero-shot" href="assets/screenshot-desktop.png" target="_blank" rel="noopener">
-        <img src="assets/screenshot-desktop.png" alt="Claude Usage desktop widget showing Session 20%, Weekly 25%, Sonnet weekly 0%, with the Settings panel open." loading="eager">
+        <img src="assets/screenshot-desktop.png" alt="Claude Usage desktop widget showing session, weekly, and per-model weekly limits with the Settings panel open." loading="eager">
       </a>
     </header>
 
@@ -764,6 +764,21 @@
       { key: 'seven_day_opus',   label: 'Opus weekly' },
       { key: 'seven_day_sonnet', label: 'Sonnet weekly' },
     ];
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    // Labels for the `limits` array entries. Scoped entries carry the model name
+    // (e.g. "Fable", "Opus") in scope.model.display_name, so new models show up
+    // without a code change.
+    function limitLabel(l) {
+      if (l.kind === 'session') return 'Session (5h)';
+      if (l.kind === 'weekly_all') return 'Weekly (all models)';
+      const scopeName = l.scope?.model?.display_name || l.scope?.surface?.display_name;
+      if (scopeName) return `${scopeName} weekly`;
+      if (l.group === 'weekly') return 'Weekly';
+      return l.kind || 'Limit';
+    }
     function renderRow(label, limit) {
       const pct = Math.max(0, Math.min(100, Number(limit.utilization) || 0));
       const resetAt = limit.resets_at ? new Date(limit.resets_at).getTime() : null;
@@ -771,7 +786,7 @@
       return `
         <div class="row">
           <div class="row-head">
-            <span class="label">${label}</span>
+            <span class="label">${esc(label)}</span>
             <span class="pct ${cls}">${Math.round(pct)}%</span>
             ${resetAt ? `<span class="reset"><span data-reset="${resetAt}">${fmtUntil(resetAt)}</span></span>` : ''}
           </div>
@@ -782,9 +797,16 @@
       const { data, ts } = payload;
       const widget = $('widget');
       const rows = [];
-      for (const def of LIMIT_DEFS) {
-        const v = data[def.key];
-        if (v && typeof v.utilization === 'number') rows.push(renderRow(def.label, v));
+      if (Array.isArray(data.limits) && data.limits.length > 0) {
+        for (const l of data.limits) {
+          if (!l || typeof l.percent !== 'number') continue;
+          rows.push(renderRow(limitLabel(l), { utilization: l.percent, resets_at: l.resets_at }));
+        }
+      } else {
+        for (const def of LIMIT_DEFS) {
+          const v = data[def.key];
+          if (v && typeof v.utilization === 'number') rows.push(renderRow(def.label, v));
+        }
       }
       widget.innerHTML = rows.length === 0
         ? `<div class="empty-mini">No limits reported.</div>`

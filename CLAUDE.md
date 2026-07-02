@@ -4,7 +4,7 @@ Guidance for AI assistants (and humans) working in this repo. Keep it short and 
 
 ## What this is
 
-**Claude Usage** — a Windows desktop widget that shows your live claude.ai quota (Session/Weekly/Opus/Sonnet limits). Tauri 2 + Rust backend + a tiny vanilla-JS frontend, distributed as a signed MSI with an in-app auto-updater. Windows-only (uses system WebView2). End-user docs live in [README.md](README.md); this file is about working on the code.
+**Claude Usage** — a Windows desktop widget that shows your live claude.ai quota (Session/Weekly plus per-model weekly limits, rendered dynamically from the API's `limits` array). Tauri 2 + Rust backend + a tiny vanilla-JS frontend, distributed as a signed MSI with an in-app auto-updater. Windows-only (uses system WebView2). End-user docs live in [README.md](README.md); this file is about working on the code.
 
 ## Layout
 
@@ -31,8 +31,9 @@ Requires Rust 1.95+, Node 20+, and Visual Studio Build Tools 2022 with the **Des
 
 The release is a manual local build+sign+publish (no CI). Signing config lives in `app/.env` (gitignored; copy from `app/.env.example`).
 
-1. **Bump the version in these 4 files (keep them in sync):**
+1. **Bump the version in these 5 files (keep them in sync):**
    - `app/package.json`
+   - `app/package-lock.json` — or just run `npm install` in `app/` after bumping `package.json`
    - `app/src-tauri/tauri.conf.json`
    - `app/src-tauri/Cargo.toml`
    - `app/src-tauri/Cargo.lock` — the `[[package]] name = "claude-usage-app"` entry

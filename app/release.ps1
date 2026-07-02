@@ -69,13 +69,26 @@ Write-Output "Signing key: $($env:TAURI_SIGNING_PRIVATE_KEY_PATH)"
 Write-Output "Password set: $(if ($env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD) { 'yes' } else { 'no (key has no password)' })"
 Write-Output ""
 
+# The built MSI is named from tauri.conf.json's version, but everything below
+# keys off package.json — if they disagree, we'd silently package the PREVIOUS
+# release's MSI still sitting in the bundle dir. Refuse to build out of sync.
+$version = (Get-Content "package.json" -Raw | ConvertFrom-Json).version
+$confVersion = (Get-Content "src-tauri\tauri.conf.json" -Raw | ConvertFrom-Json).version
+$cargoVersion = (Select-String -Path "src-tauri\Cargo.toml" -Pattern '^version\s*=\s*"([^"]+)"' | Select-Object -First 1).Matches[0].Groups[1].Value
+if ($confVersion -ne $version -or $cargoVersion -ne $version) {
+    Write-Error "Version mismatch: package.json=$version tauri.conf.json=$confVersion Cargo.toml=$cargoVersion — bump all four files (see header)."
+    exit 1
+}
+
 npm run tauri build
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+$buildExit = $LASTEXITCODE
+# Don't leave signing secrets in the calling shell's environment.
+Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY, Env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD -ErrorAction SilentlyContinue
+if ($buildExit -ne 0) { exit $buildExit }
 
 # Copy artifacts to installers/ with the v0.3.0 naming convention
 # (lowercase, no en-US suffix) so URLs in latest.json stay short.
 $bundleDir = "src-tauri\target\release\bundle\msi"
-$version = (Get-Content "package.json" -Raw | ConvertFrom-Json).version
 $srcMsi  = Join-Path $bundleDir "Claude Usage_${version}_x64_en-US.msi"
 $srcSig  = "$srcMsi.sig"
 $dstMsi  = "installers\claude-usage_${version}_x64.msi"

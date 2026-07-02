@@ -10,6 +10,7 @@ use tauri_plugin_autostart::ManagerExt;
 use url::Url;
 
 const CLAUDE_BASE: &str = "https://claude.ai/";
+const KOFI_URL: &str = "https://ko-fi.com/edgetpu";
 const POLL_INTERVAL_SECS: u64 = 60;
 
 // Surface the claude.ai sign-in window only after this many consecutive
@@ -144,7 +145,7 @@ pub fn run() {
                 // first cookies_for_url call (some platforms need this).
                 tokio::time::sleep(Duration::from_secs(2)).await;
                 loop {
-                    fetch_usage(&app_handle).await;
+                    fetch_usage(&app_handle, true).await;
                     tokio::time::sleep(Duration::from_secs(POLL_INTERVAL_SECS)).await;
                 }
             });
@@ -165,7 +166,8 @@ pub fn run() {
             open_login,
             sign_out_cmd,
             toggle_autostart_cmd,
-            is_autostart_enabled
+            is_autostart_enabled,
+            open_kofi
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -173,7 +175,7 @@ pub fn run() {
 
 #[tauri::command]
 async fn manual_refresh(app: AppHandle) {
-    fetch_usage(&app).await;
+    fetch_usage(&app, false).await;
 }
 
 #[tauri::command]
@@ -196,6 +198,11 @@ fn is_autostart_enabled(app: AppHandle) -> bool {
     app.autolaunch().is_enabled().unwrap_or(false)
 }
 
+#[tauri::command]
+fn open_kofi() {
+    let _ = open::that_detached(KOFI_URL);
+}
+
 fn show_main(app: &AppHandle) {
     if let Some(w) = app.get_webview_window("main") {
         let _ = w.show();
@@ -214,7 +221,7 @@ fn show_claude_login(app: &AppHandle) {
 
 fn trigger_fetch(app: AppHandle) {
     tauri::async_runtime::spawn(async move {
-        fetch_usage(&app).await;
+        fetch_usage(&app, false).await;
     });
 }
 
@@ -267,7 +274,10 @@ fn sign_out(app: AppHandle) {
     );
 }
 
-async fn fetch_usage(app: &AppHandle) {
+/// `from_poll` marks the 60s background loop. Only poll failures count toward
+/// LOGIN_FAIL_THRESHOLD — user-initiated refreshes can arrive in a burst and
+/// would collapse the "consecutive failures over time" window to zero.
+async fn fetch_usage(app: &AppHandle, from_poll: bool) {
     let claude = match app.get_webview_window("claude") {
         Some(w) => w,
         None => return,
@@ -310,25 +320,42 @@ async fn fetch_usage(app: &AppHandle) {
     let org_value = cookies
         .iter()
         .find(|c| c.name() == "lastActiveOrg")
-        .map(|c| c.value().to_string());
+        .map(|c| c.value().to_string())
+        // Org IDs are UUIDs. Anything else is a corrupt (or planted) cookie —
+        // don't let it steer the authenticated request to an arbitrary path.
+        .filter(|v| {
+            !v.is_empty()
+                && v.len() <= 40
+                && v.chars().all(|c| c.is_ascii_hexdigit() || c == '-')
+        });
 
     let Some(org_id) = org_value else {
         // Could be a real sign-out, but also fires on startup before WebView2
-        // has loaded claude.ai or right after a webview reload. Only surface
-        // the sign-in window after several consecutive failures.
+        // has loaded claude.ai or right after a webview reload. Pop the
+        // sign-in window once per failure streak (==, not >=, so it doesn't
+        // re-steal focus every poll), and stay quiet below the threshold so
+        // a transient blip doesn't flash "Not signed in".
         let fails = app.state::<LoginFailures>();
-        let count = fails.0.fetch_add(1, Ordering::SeqCst) + 1;
-        if count >= LOGIN_FAIL_THRESHOLD {
+        let count = if from_poll {
+            fails.0.fetch_add(1, Ordering::SeqCst) + 1
+        } else {
+            fails.0.load(Ordering::SeqCst)
+        };
+        if from_poll && count == LOGIN_FAIL_THRESHOLD {
             let _ = claude.show();
             let _ = claude.set_focus();
         }
-        let _ = app.emit(
-            "status",
-            StatusEvent {
-                state: "logged_out".into(),
-                message: Some("Sign in to claude.ai to start tracking usage.".into()),
-            },
-        );
+        // Background polls stay quiet below the threshold (transient blip),
+        // but a deliberate user refresh always gets an honest answer.
+        if !from_poll || count >= LOGIN_FAIL_THRESHOLD {
+            let _ = app.emit(
+                "status",
+                StatusEvent {
+                    state: "logged_out".into(),
+                    message: Some("Sign in to claude.ai to start tracking usage.".into()),
+                },
+            );
+        }
         return;
     };
 
@@ -387,18 +414,24 @@ async fn fetch_usage(app: &AppHandle) {
                 // Same gating as the no-cookie branch — a one-off 401/403 is
                 // usually a transient server hiccup, not a real sign-out.
                 let fails = app.state::<LoginFailures>();
-                let count = fails.0.fetch_add(1, Ordering::SeqCst) + 1;
-                if count >= LOGIN_FAIL_THRESHOLD {
+                let count = if from_poll {
+                    fails.0.fetch_add(1, Ordering::SeqCst) + 1
+                } else {
+                    fails.0.load(Ordering::SeqCst)
+                };
+                if from_poll && count == LOGIN_FAIL_THRESHOLD {
                     let _ = claude.show();
                     let _ = claude.set_focus();
                 }
-                let _ = app.emit(
-                    "status",
-                    StatusEvent {
-                        state: "logged_out".into(),
-                        message: Some(format!("HTTP {} — sign in again", status)),
-                    },
-                );
+                if !from_poll || count >= LOGIN_FAIL_THRESHOLD {
+                    let _ = app.emit(
+                        "status",
+                        StatusEvent {
+                            state: "logged_out".into(),
+                            message: Some(format!("HTTP {} — sign in again", status)),
+                        },
+                    );
+                }
             } else {
                 let _ = app.emit(
                     "status",

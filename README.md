@@ -29,10 +29,10 @@ If this saves you a few quota checks, a GitHub star helps other Claude users fin
 
 ### 🎯 Core
 
-- **📊 Live Quota Display** — All four Claude.ai limits at a glance: Session (5h), Weekly, Sonnet weekly, Opus weekly, plus any extra-usage balance.
+- **📊 Live Quota Display** — Every limit claude.ai reports, at a glance: Session (5h), all-models weekly, and per-model weekly limits (Opus, Sonnet, Fable, …) — new models appear automatically. Extra-usage balance included.
 - **⏱️ 60-Second Auto-Refresh** — Background loop polls quota every minute; reset countdowns shown next to each limit.
 - **🪟 Compact 440×420 Window** — Clean dark widget that stays out of the way.
-- **🎯 System Tray** — Left-click for window, right-click for menu. Hides from the taskbar when minimized.
+- **🎯 System Tray** — Left-click for window, right-click for menu. Closing the window hides it to the tray instead of quitting.
 - **📦 Tiny Footprint** — ~5 MB MSI, ~50 MB runtime memory.
 
 ### ⚙️ Settings Panel
@@ -42,6 +42,7 @@ Gear icon, top right:
 - **🚀 Start with Windows** — Toggle autostart; the app sits silently in the tray after login.
 - **🔓 Sign out of claude.ai** — Clears the embedded webview session and re-prompts for login.
 - **🔄 Check for updates** — Manual trigger; otherwise checked automatically on startup.
+- **☕ Support on Ko-fi** — If the widget saves you time, [a coffee](https://ko-fi.com/edgetpu) keeps it maintained.
 
 ### 🛡️ Secure Auto-Update
 

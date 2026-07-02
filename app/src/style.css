@@ -372,11 +372,31 @@ html, body {
 }
 
 .settings-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
   font-size: 0.7rem;
   color: var(--text-faint);
-  text-align: right;
   font-variant-numeric: tabular-nums;
 }
+
+.kofi-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: none;
+  padding: 0.15rem 0;
+  color: var(--text-faint);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.74rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.kofi-btn svg { width: 12px; height: 12px; }
+.kofi-btn:hover { color: var(--accent-strong); }
 
 /* ---------- Bottom bar ---------- */
 .bottombar {
