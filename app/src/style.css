@@ -412,4 +412,31 @@ html, body {
   color: var(--text-faint);
 }
 
+/* ---------- Update banner ---------- */
+/* In-flow bar above the topbar: pushes content down instead of covering
+   the brand / refresh / settings controls. */
+.update-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-warm);
+  border-bottom: 1px solid rgba(217, 119, 87, 0.45);
+  font-size: 0.78rem;
+  color: var(--text);
+  flex-shrink: 0;
+}
+#updateMsg {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.update-banner .settings-btn {
+  margin-left: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.update-banner .icon-btn { flex-shrink: 0; }
+
 .hidden { display: none !important; }

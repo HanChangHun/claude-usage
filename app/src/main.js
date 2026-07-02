@@ -187,6 +187,28 @@ async function syncAutostartToggle() {
   }
 }
 
+// Non-modal top banner instead of a dialog: shows the version, installs on
+// click, and can be dismissed with ✕ (the next check will offer it again).
+function showUpdateBanner(update) {
+  $('updateMsg').textContent = `v${update.version} available`;
+  if (update.body) $('updateMsg').title = update.body;
+  $('updateBanner').classList.remove('hidden');
+  $('updateInstall').onclick = async () => {
+    const b = $('updateInstall');
+    b.disabled = true;
+    b.textContent = 'Installing…';
+    try {
+      await update.downloadAndInstall();
+      await processApi.relaunch();
+    } catch (e) {
+      console.warn('update install failed', e);
+      $('updateMsg').textContent = 'Update failed — try again later';
+      b.disabled = false;
+      b.textContent = 'Install & restart';
+    }
+  };
+}
+
 async function checkForUpdates(userInitiated = false) {
   if (!updaterApi) {
     if (userInitiated) showSettingsStatus('Updater plugin unavailable.', 'error');
@@ -199,28 +221,8 @@ async function checkForUpdates(userInitiated = false) {
       if (userInitiated) showSettingsStatus('You are on the latest version.', 'success');
       return;
     }
-    // Update available — confirm with user
-    const confirmed = await dialogApi.ask(
-      `A new version (v${update.version}) is available.\n\n` +
-        (update.body ? `What's new:\n${update.body}\n\n` : '') +
-        `Download and install now? The app will restart.`,
-      { title: 'Update available', kind: 'info', okLabel: 'Install', cancelLabel: 'Later' }
-    );
-    if (!confirmed) {
-      hideSettingsStatus();
-      return;
-    }
-    showSettingsStatus(`Downloading v${update.version}…`, 'info');
-    await update.downloadAndInstall((event) => {
-      // event types: { event: 'Started', data: { contentLength } }
-      //              { event: 'Progress', data: { chunkLength } }
-      //              { event: 'Finished' }
-      if (event.event === 'Progress') {
-        // Could show a progress bar here in future
-      }
-    });
-    showSettingsStatus('Installed. Restarting…', 'success');
-    await processApi.relaunch();
+    if (userInitiated) hideSettingsStatus();
+    showUpdateBanner(update);
   } catch (e) {
     console.warn('update check failed', e);
     if (userInitiated) showSettingsStatus(`Update failed: ${e?.message || e}`, 'error');
@@ -301,6 +303,10 @@ $('checkUpdateBtn').addEventListener('click', () => checkForUpdates(true));
 
 $('kofiBtn').addEventListener('click', async () => {
   try { await core.invoke('open_kofi'); } catch (e) { console.warn(e); }
+});
+
+$('updateDismiss').addEventListener('click', () => {
+  $('updateBanner').classList.add('hidden');
 });
 
 // ---------- init ----------
