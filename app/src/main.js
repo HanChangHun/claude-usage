@@ -152,9 +152,15 @@ function applyStatus(status) {
       if (t) t.textContent = 'Sign in needed';
       if (m) m.textContent = status.message || 'Sign in to claude.ai to start tracking usage.';
       $('loginBtn').classList.remove('hidden');
+    } else {
+      // The empty-state sign-in button is gone once data has rendered
+      // (renderWidget replaces #widget's content) — offer this one instead.
+      $('signinBar').classList.remove('hidden');
     }
     $('updatedBadge').dataset.state = '';
     $('updatedText').textContent = 'Not signed in';
+    // Let the user retry by hand once they've signed in.
+    $('refreshBtn').disabled = false;
   } else if (status.state === 'error') {
     $('updatedBadge').dataset.state = 'error';
     $('updatedText').textContent = 'Error';
@@ -162,6 +168,13 @@ function applyStatus(status) {
       const m = $('emptyMsg');
       if (m) m.textContent = status.message || 'Something went wrong.';
     }
+    // An error state must not lock the user out of manual retries.
+    $('refreshBtn').disabled = false;
+  }
+  if (status.state === 'logged_out' || status.state === 'error') {
+    // A refresh can resolve to a status-only answer (no usage-update) —
+    // stop the spinner now instead of letting it run out the 8s fallback.
+    endRefreshSpin();
   }
 }
 
@@ -229,15 +242,20 @@ async function checkForUpdates(userInitiated = false) {
   }
 }
 
+function endRefreshSpin() {
+  inFlightRefresh = false;
+  $('refreshBtn').classList.remove('spinning');
+  if (refreshTimeoutId) { clearTimeout(refreshTimeoutId); refreshTimeoutId = null; }
+}
+
 // ---------- event wiring ----------
 event.listen('usage-update', (e) => {
   lastPayload = e.payload;
   statusState = null;
   renderWidget(lastPayload);
+  $('signinBar').classList.add('hidden');
   pulseLive();
-  inFlightRefresh = false;
-  $('refreshBtn').classList.remove('spinning');
-  if (refreshTimeoutId) { clearTimeout(refreshTimeoutId); refreshTimeoutId = null; }
+  endRefreshSpin();
 });
 
 event.listen('status', (e) => {
@@ -256,6 +274,10 @@ $('refreshBtn').addEventListener('click', async () => {
 });
 
 $('loginBtn').addEventListener('click', async () => {
+  try { await core.invoke('open_login'); } catch (e) { console.warn(e); }
+});
+
+$('signinBarBtn').addEventListener('click', async () => {
   try { await core.invoke('open_login'); } catch (e) { console.warn(e); }
 });
 

@@ -35,6 +35,18 @@ Set-Location $scriptDir
 
 $repo = "HanChangHun/claude-usage"
 
+# The built MSI is named from tauri.conf.json's version, but everything below
+# keys off package.json — if they disagree, we'd silently package the PREVIOUS
+# release's MSI still sitting in the bundle dir. Refuse to build out of sync.
+# (Checked before loading .env so an abort can't leave secrets in the shell.)
+$version = (Get-Content "package.json" -Raw | ConvertFrom-Json).version
+$confVersion = (Get-Content "src-tauri\tauri.conf.json" -Raw | ConvertFrom-Json).version
+$cargoVersion = (Select-String -Path "src-tauri\Cargo.toml" -Pattern '^version\s*=\s*"([^"]+)"' | Select-Object -First 1).Matches[0].Groups[1].Value
+if ($confVersion -ne $version -or $cargoVersion -ne $version) {
+    Write-Error "Version mismatch: package.json=$version tauri.conf.json=$confVersion Cargo.toml=$cargoVersion — bump all four files (see header)."
+    exit 1
+}
+
 # ---- Load .env (expanding $HOME and %ENV% references in values) ----
 $envFile = Join-Path $scriptDir ".env"
 if (-not (Test-Path $envFile)) {
@@ -55,35 +67,28 @@ Get-Content $envFile | ForEach-Object {
     }
 }
 
-# Tauri's `build` step only reads TAURI_SIGNING_PRIVATE_KEY (string), not
-# TAURI_SIGNING_PRIVATE_KEY_PATH. Translate path → content here.
-if ($env:TAURI_SIGNING_PRIVATE_KEY_PATH -and -not $env:TAURI_SIGNING_PRIVATE_KEY) {
-    if (-not (Test-Path $env:TAURI_SIGNING_PRIVATE_KEY_PATH)) {
-        Write-Error "Signing key not found at $($env:TAURI_SIGNING_PRIVATE_KEY_PATH)"
-        exit 1
+# Don't leave signing secrets in the calling shell's environment, on any
+# exit path — the script runs in the caller's process.
+try {
+    # Tauri's `build` step only reads TAURI_SIGNING_PRIVATE_KEY (string), not
+    # TAURI_SIGNING_PRIVATE_KEY_PATH. Translate path → content here.
+    if ($env:TAURI_SIGNING_PRIVATE_KEY_PATH -and -not $env:TAURI_SIGNING_PRIVATE_KEY) {
+        if (-not (Test-Path $env:TAURI_SIGNING_PRIVATE_KEY_PATH)) {
+            Write-Error "Signing key not found at $($env:TAURI_SIGNING_PRIVATE_KEY_PATH)"
+            exit 1
+        }
+        $env:TAURI_SIGNING_PRIVATE_KEY = (Get-Content $env:TAURI_SIGNING_PRIVATE_KEY_PATH -Raw)
     }
-    $env:TAURI_SIGNING_PRIVATE_KEY = (Get-Content $env:TAURI_SIGNING_PRIVATE_KEY_PATH -Raw)
+
+    Write-Output "Signing key: $($env:TAURI_SIGNING_PRIVATE_KEY_PATH)"
+    Write-Output "Password set: $(if ($env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD) { 'yes' } else { 'no (key has no password)' })"
+    Write-Output ""
+
+    npm run tauri build
+    $buildExit = $LASTEXITCODE
+} finally {
+    Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY, Env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD -ErrorAction SilentlyContinue
 }
-
-Write-Output "Signing key: $($env:TAURI_SIGNING_PRIVATE_KEY_PATH)"
-Write-Output "Password set: $(if ($env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD) { 'yes' } else { 'no (key has no password)' })"
-Write-Output ""
-
-# The built MSI is named from tauri.conf.json's version, but everything below
-# keys off package.json — if they disagree, we'd silently package the PREVIOUS
-# release's MSI still sitting in the bundle dir. Refuse to build out of sync.
-$version = (Get-Content "package.json" -Raw | ConvertFrom-Json).version
-$confVersion = (Get-Content "src-tauri\tauri.conf.json" -Raw | ConvertFrom-Json).version
-$cargoVersion = (Select-String -Path "src-tauri\Cargo.toml" -Pattern '^version\s*=\s*"([^"]+)"' | Select-Object -First 1).Matches[0].Groups[1].Value
-if ($confVersion -ne $version -or $cargoVersion -ne $version) {
-    Write-Error "Version mismatch: package.json=$version tauri.conf.json=$confVersion Cargo.toml=$cargoVersion — bump all four files (see header)."
-    exit 1
-}
-
-npm run tauri build
-$buildExit = $LASTEXITCODE
-# Don't leave signing secrets in the calling shell's environment.
-Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY, Env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD -ErrorAction SilentlyContinue
 if ($buildExit -ne 0) { exit $buildExit }
 
 # Copy artifacts to installers/ with the v0.3.0 naming convention

@@ -73,12 +73,12 @@ GET https://claude.ai/api/organizations/<org_id>/usage
 Only a logged-in browser tab on `claude.ai` can call it (same-origin + session cookie). The desktop app embeds a **hidden WebView2 window** pointed at claude.ai — this is also where you sign in once. A Rust loop in the app:
 
 1. Reads cookies from the embedded webview every 60 seconds (`Webview::cookies_for_url`).
-2. Extracts the `lastActiveOrg` cookie value.
+2. Resolves the org ID: the `lastActiveOrg` cookie → last known-good value → `GET /api/organizations` (same-origin discovery, used when the cookie is missing or stale).
 3. Calls the `/usage` endpoint with `reqwest`, attaching all session cookies.
 4. Emits a Tauri event with the JSON response.
 5. The main window subscribes and re-renders the widget.
 
-If the cookies expire (two consecutive failures), the app surfaces the embedded webview so you can sign in again.
+If the session really expires (three consecutive auth failures — transient blips and challenge pages don't count), the app surfaces the embedded webview so you can sign in again, at most once every 6 hours; the widget itself always shows a sign-in button meanwhile.
 
 **Stack**: Tauri 2 + Rust + WebView2 (system) + a tiny vanilla-JS frontend.
 
@@ -87,7 +87,7 @@ If the cookies expire (two consecutive failures), the app surfaces the embedded 
 ## 🔒 Privacy & Security
 
 - 🏠 **Local Only** — Your claude.ai session cookie stays inside the embedded webview (same trust boundary as a normal browser tab on claude.ai).
-- 🎯 **One Endpoint** — The only network request the app makes is the same `/api/organizations/<org>/usage` call claude.ai makes for itself.
+- 🎯 **Same-Origin Only** — The app only calls two claude.ai API endpoints, the same ones claude.ai uses for itself: `/api/organizations` (org discovery when the cookie is absent) and `/api/organizations/<org>/usage`.
 - 🔐 **Signed Updates** — The auto-updater talks to GitHub Releases and verifies signatures before applying any binary.
 - 🚫 **No Telemetry** — No analytics, no third-party services, no tracking.
 - 📖 **Open Source** — Code is fully public; audit anything you'd like.

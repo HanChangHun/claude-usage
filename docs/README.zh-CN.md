@@ -73,12 +73,12 @@ GET https://claude.ai/api/organizations/<org_id>/usage
 只有已登录 `claude.ai` 的浏览器标签页才能调用它(同源 + 会话 Cookie)。桌面应用内嵌了一个**隐藏的 WebView2 窗口**指向 claude.ai — 你也在这里完成一次性登录。应用内的 Rust 循环:
 
 1. 每 60 秒从内嵌 WebView 读取 Cookie(`Webview::cookies_for_url`),
-2. 提取 `lastActiveOrg` Cookie 值,
+2. 解析 org ID(`lastActiveOrg` Cookie → 最近一次有效值 → Cookie 缺失或失效时通过同源 `GET /api/organizations` 发现),
 3. 使用 `reqwest` 调用 `/usage` 端点,附带所有会话 Cookie,
 4. 通过 Tauri 事件发送 JSON 响应,
 5. 主窗口订阅事件并重新渲染小工具。
 
-如果 Cookie 过期(连续两次失败),应用会显示内嵌 WebView 让你重新登录。
+如果会话真正过期(连续三次认证失败 — 瞬时故障和挑战页面不计入),应用会显示内嵌 WebView 让你重新登录,且最多每 6 小时自动弹出一次;期间小工具上始终有登录按钮。
 
 **技术栈**:Tauri 2 + Rust + WebView2 (系统) + 轻量级原生 JS 前端。
 
@@ -87,7 +87,7 @@ GET https://claude.ai/api/organizations/<org_id>/usage
 ## 🔒 隐私与安全
 
 - 🏠 **仅本地** — claude.ai 会话 Cookie 仅保留在内嵌 WebView 中(与 claude.ai 的普通浏览器标签页处于相同的信任边界)。
-- 🎯 **单一端点** — 应用唯一发出的网络请求,与 claude.ai 自身调用的 `/api/organizations/<org>/usage` 完全相同。
+- 🎯 **仅同源接口** — 应用只调用两个 claude.ai 自身也在使用的 API:`/api/organizations`(Cookie 缺失时的 org 发现)和 `/api/organizations/<org>/usage`。
 - 🔐 **签名更新** — 自动更新器只与 GitHub Releases 通信,应用任何二进制文件前都验证签名。
 - 🚫 **无遥测** — 无分析、无第三方服务、无追踪。
 - 📖 **开源** — 所有代码完全公开,可自由审计。

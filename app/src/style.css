@@ -398,6 +398,22 @@ html, body {
 .kofi-btn svg { width: 12px; height: 12px; }
 .kofi-btn:hover { color: var(--accent-strong); }
 
+/* ---------- Sign-in bar ---------- */
+/* Shown when the session drops after data has rendered — the empty-state
+   sign-in button lives inside #widget and is gone by then. */
+.signin-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid rgba(217, 119, 87, 0.45);
+  background: var(--bg-warm);
+  font-size: 0.78rem;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
 /* ---------- Bottom bar ---------- */
 .bottombar {
   padding: 0.55rem 1rem;

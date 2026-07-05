@@ -73,12 +73,12 @@ GET https://claude.ai/api/organizations/<org_id>/usage
 이 엔드포인트는 `claude.ai`에 로그인된 브라우저 탭에서만 호출 가능합니다 (same-origin + 세션 쿠키 필요). 데스크톱 앱은 claude.ai를 가리키는 **숨겨진 WebView2 윈도우**를 임베드합니다 — 처음 로그인도 여기서 일어나죠. 앱 안의 Rust 루프가:
 
 1. 60초마다 임베디드 웹뷰에서 쿠키를 읽고 (`Webview::cookies_for_url`),
-2. `lastActiveOrg` 쿠키 값을 추출하고,
+2. org ID를 결정하고 (`lastActiveOrg` 쿠키 → 마지막으로 유효했던 값 → 쿠키가 없거나 낡았을 땐 same-origin `GET /api/organizations`로 탐색),
 3. 모든 세션 쿠키를 붙여 `reqwest`로 `/usage` 엔드포인트를 호출하고,
 4. JSON 응답을 Tauri 이벤트로 발행하고,
 5. 메인 윈도우가 구독해서 위젯을 다시 렌더링합니다.
 
-쿠키가 만료되면 (연속 2회 실패 시) 임베디드 웹뷰가 표시돼서 다시 로그인할 수 있습니다.
+세션이 정말 만료되면 (연속 3회 인증 실패 — 일시적 오류나 챌린지 페이지는 세지 않음) 임베디드 웹뷰가 표시돼서 다시 로그인할 수 있습니다. 자동 표시는 최대 6시간에 한 번이며, 그동안에도 위젯에는 항상 로그인 버튼이 보입니다.
 
 **스택**: Tauri 2 + Rust + WebView2 (시스템) + 가벼운 vanilla-JS 프론트엔드.
 
@@ -87,7 +87,7 @@ GET https://claude.ai/api/organizations/<org_id>/usage
 ## 🔒 개인정보 & 보안
 
 - 🏠 **로컬에만** — claude.ai 세션 쿠키는 임베디드 웹뷰 안에만 머뭅니다 (claude.ai의 일반 브라우저 탭과 동일한 신뢰 경계).
-- 🎯 **단일 엔드포인트** — 앱이 보내는 네트워크 요청은 claude.ai가 스스로에게 호출하는 것과 동일한 `/api/organizations/<org>/usage` 하나뿐입니다.
+- 🎯 **Same-Origin 전용** — 앱이 호출하는 API는 claude.ai가 스스로 쓰는 것과 동일한 두 개뿐입니다: `/api/organizations` (쿠키가 없을 때의 org 탐색)와 `/api/organizations/<org>/usage`.
 - 🔐 **서명된 업데이트** — 자동 업데이터는 GitHub Releases와만 통신하고, 바이너리 적용 전에 서명을 검증합니다.
 - 🚫 **텔레메트리 없음** — 분석, 서드파티 서비스, 추적 일체 없음.
 - 📖 **오픈 소스** — 모든 코드 공개; 자유롭게 감사 가능합니다.

@@ -340,9 +340,8 @@ dependencies = [
 
 [[package]]
 name = "claude-usage-app"
-version = "0.3.7"
+version = "0.3.8"
 dependencies = [
- "log",
  "open",
  "reqwest 0.12.28",
  "serde",
