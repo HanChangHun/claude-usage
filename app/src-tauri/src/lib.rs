@@ -107,6 +107,10 @@ pub fn run() {
             .min_inner_size(300.0, 320.0)
             .resizable(true)
             .visible(true)
+            // Frameless: the in-app topbar is the titlebar (drag region + ─/✕).
+            // The hidden claude.ai window below keeps native decorations —
+            // we can't inject controls into an external page.
+            .decorations(false)
             .build()?;
 
             // ---- Hidden claude.ai webview (cookie host + login surface) ----

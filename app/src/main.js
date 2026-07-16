@@ -352,3 +352,11 @@ syncAutostartToggle();
 
 // Silent update check on startup (delay 5s so the user sees their data first)
 setTimeout(() => checkForUpdates(false), 5000);
+
+// ---- Window controls (frameless custom titlebar) -----------------------
+{
+  const appWindow = window.__TAURI__.window.getCurrentWindow();
+  // close = close-to-tray: Rust 쪽 CloseRequested 핸들러가 hide 로 바꿔준다.
+  document.getElementById('winMinBtn')?.addEventListener('click', () => appWindow.minimize());
+  document.getElementById('winCloseBtn')?.addEventListener('click', () => appWindow.close());
+}

@@ -456,3 +456,19 @@ html, body {
 .update-banner .icon-btn { flex-shrink: 0; }
 
 .hidden { display: none !important; }
+
+/* ---- Window controls (frameless custom titlebar) ----------------------- */
+.win-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--border-soft);
+  margin: 0 2px;
+}
+.icon-btn.win-close:hover {
+  background: var(--crit);
+  border-color: var(--crit);
+  color: #1A1917;
+}
+
+/* 드래그 데드스팟 방지: 별 마크 클릭이 drag-region 인 .brand 로 전달되게 */
+.brand-mark { pointer-events: none; }
