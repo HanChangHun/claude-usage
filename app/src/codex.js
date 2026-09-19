@@ -1,15 +1,27 @@
-export function weeklyLimits(usage) {
+// Codex reports up to two windows per bucket: a 5-hour session window (Plus
+// and similar plans) and the 7-day weekly window. A row is shown only for a
+// window the account actually reports, so plans without a session limit keep
+// the single weekly row.
+const WINDOWS = [
+  { minutes: 300, label: 'Codex session (5h)' },
+  { minutes: 10080, label: 'Codex weekly' },
+];
+
+export function codexLimits(usage) {
   const bucket = usage.rateLimitsByLimitId == null
     ? usage.rateLimits
     : usage.rateLimitsByLimitId.codex;
   if (!bucket || (bucket.limitId && bucket.limitId !== 'codex')) return [];
-  const window = [bucket.primary, bucket.secondary].find(window =>
-    window?.windowDurationMins === 10080 && Number.isFinite(window.usedPercent));
-  return window ? [{
-    label: 'Codex weekly',
-    utilization: Math.max(0, Math.min(100, window.usedPercent)),
-    resets_at: window.resetsAt == null ? null : new Date(window.resetsAt * 1000).toISOString(),
-  }] : [];
+  const windows = [bucket.primary, bucket.secondary]
+    .filter(window => Number.isFinite(window?.usedPercent));
+  return WINDOWS.flatMap(({ minutes, label }) => {
+    const window = windows.find(window => window.windowDurationMins === minutes);
+    return window ? [{
+      label,
+      utilization: Math.max(0, Math.min(100, window.usedPercent)),
+      resets_at: window.resetsAt == null ? null : new Date(window.resetsAt * 1000).toISOString(),
+    }] : [];
+  });
 }
 
 export async function initCodex({ renderRow }) {
@@ -31,10 +43,10 @@ export async function initCodex({ renderRow }) {
     try {
       const usage = await window.__TAURI__.core.invoke('read_codex_usage');
       if (!enabled || requestGeneration !== generation) return;
-      const limits = weeklyLimits(usage);
+      const limits = codexLimits(usage);
       rows.innerHTML = limits.map(limit => renderRow(limit.label, limit)).join('');
       status.classList.toggle('hidden', limits.length > 0);
-      status.textContent = 'No Codex weekly limit reported. Check your ChatGPT login in Codex CLI, then use the top refresh button.';
+      status.textContent = 'No Codex limits reported. Check your ChatGPT login in Codex CLI, then use the top refresh button.';
     } catch (error) {
       if (!enabled || requestGeneration !== generation) return;
       rows.replaceChildren();

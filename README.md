@@ -125,11 +125,11 @@ cd app
 
 MIT © 2026 Han Changhun
 
-## Optional Codex weekly usage
+## Optional Codex usage
 
 Enable **Settings → Show Codex usage** to add Codex subscription limits to the
-widget. It shows the main Codex weekly limit, the used percentage and
-a reset countdown in the same style as Claude. Spark and session limits are omitted. The option is saved locally;
+widget. It shows the Codex weekly limit, the used percentage and
+a reset countdown in the same style as Claude. On plans that also report a 5-hour session window (Plus, for example), a **Codex session (5h)** row appears above the weekly row automatically; plans without one keep the single weekly row. Spark limits are omitted. The option is saved locally;
 turning it off stops polling. Both providers follow the shared 60-second background refresh when enabled. The top refresh button and tray Refresh now refresh both; no separate Codex button is needed.
 
 Install [Codex CLI](https://developers.openai.com/codex/cli) and run `codex login`
@@ -144,4 +144,4 @@ model turn or read conversation history. Credentials remain managed by Codex;
 only quota windows and bucket labels reach the widget. No reset credits are used.
 Windows native CLI and standard npm installations are discovered automatically;
 for a custom install, set `CODEX_USAGE_CLI` to the native `codex.exe` path before
-launching the widget. Missing weekly windows are shown as unavailable, not 0%.
+launching the widget. Missing windows are shown as unavailable, not 0%.
