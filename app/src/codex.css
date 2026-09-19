@@ -4,7 +4,7 @@
 .codex-status, .codex-help { font-size: 0.78rem; line-height: 1.5; color: var(--text-muted); }
 .codex-status { font-size: 0.74rem; overflow-wrap: anywhere; }
 .codex-status[data-state="error"] { color: var(--crit); }
-.codex-rows { display: flex; flex-direction: column; }
+.codex-rows { display: flex; flex-direction: column; gap: 1.1rem; } /* same row spacing as .widget */
 .codex-help { font-size: 0.74rem; }
 .usage-content .settings { overflow: visible; }
 .usage-content:has(.codex-section:not(.hidden)) .empty { padding: 1rem 0.5rem; }
