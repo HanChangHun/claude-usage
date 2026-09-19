@@ -10,12 +10,18 @@ use tauri::{
     AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder,
 };
 use tauri_plugin_autostart::ManagerExt;
+use tauri_plugin_window_state::{AppHandleExt as _, StateFlags};
 use url::Url;
 
 const CLAUDE_BASE: &str = "https://claude.ai/";
 const ORGANIZATIONS_URL: &str = "https://claude.ai/api/organizations";
 const KOFI_URL: &str = "https://ko-fi.com/edgetpu";
 const POLL_INTERVAL_SECS: u64 = 60;
+
+// Remember only the widget's size and position. VISIBLE is deliberately
+// left out: closing hides to the tray, so a Quit while hidden would restore
+// the window hidden next time and look like a failed launch.
+const WINDOW_STATE: StateFlags = StateFlags::SIZE.union(StateFlags::POSITION);
 
 // Surface the claude.ai sign-in window only after this many consecutive
 // auth-looking failures. Avoids spurious pop-ups when WebView2 is still
@@ -91,6 +97,13 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
             show_main(app);
         }))
+        .plugin(
+            tauri_plugin_window_state::Builder::new()
+                .with_state_flags(WINDOW_STATE)
+                // The hidden claude.ai window keeps its default geometry.
+                .with_denylist(&["claude"])
+                .build(),
+        )
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None,
@@ -104,7 +117,10 @@ pub fn run() {
             app.manage(OrgState(Mutex::new(OrgIds::default())));
 
             // ---- Main widget window ----
-            let _main = WebviewWindowBuilder::new(
+            // Built hidden: the window-state plugin restores the saved geometry
+            // while the window is created, so showing afterwards avoids a flash
+            // at the default position.
+            let main = WebviewWindowBuilder::new(
                 app,
                 "main",
                 WebviewUrl::App("index.html".into()),
@@ -113,12 +129,13 @@ pub fn run() {
             .inner_size(440.0, 420.0)
             .min_inner_size(300.0, 320.0)
             .resizable(true)
-            .visible(true)
+            .visible(false)
             // Frameless: the in-app topbar is the titlebar (drag region + ─/✕).
             // The hidden claude.ai window below keeps native decorations —
             // we can't inject controls into an external page.
             .decorations(false)
             .build()?;
+            main.show()?;
 
             // ---- Hidden claude.ai webview (cookie host + login surface) ----
             let _claude = WebviewWindowBuilder::new(
@@ -207,9 +224,15 @@ pub fn run() {
 
             Ok(())
         })
-        .on_window_event(|window, event| {
+        .on_window_event(|window, event| match event {
             // Close-to-tray for both windows: hide instead of quit
-            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+            tauri::WindowEvent::CloseRequested { api, .. } => {
+                if window.label() == "main" {
+                    // The plugin only writes on a clean exit, which a tray app
+                    // rarely gets (Windows shutdown just kills it). Persist the
+                    // geometry before hiding.
+                    let _ = window.app_handle().save_window_state(WINDOW_STATE);
+                }
                 if window.label() == "main" || window.label() == "claude" {
                     let _ = window.hide();
                     api.prevent_close();
@@ -223,6 +246,12 @@ pub fn run() {
                     trigger_fetch(app);
                 }
             }
+            // Also persist whenever the widget loses focus, so the last move or
+            // resize survives a Windows shutdown without an explicit Quit.
+            tauri::WindowEvent::Focused(false) if window.label() == "main" => {
+                let _ = window.app_handle().save_window_state(WINDOW_STATE);
+            }
+            _ => {}
         })
         .invoke_handler(tauri::generate_handler![
             codex::read_codex_usage,

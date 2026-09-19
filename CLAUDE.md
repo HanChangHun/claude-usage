@@ -27,7 +27,7 @@ npm run tauri build    # release MSI -> src-tauri/target/release/bundle/msi/
 
 Requires Rust 1.95+, Node 20+, and Visual Studio Build Tools 2022 with the **Desktop development with C++** workload. There is no frontend build — edit `app/src/*` directly.
 
-The app is single-instance (`tauri-plugin-single-instance`, registered first in the builder): a second launch exits immediately and focuses the running one. Dev and release builds share the same identifier, so quit the installed copy from the tray before `npm run tauri dev`, or the dev build will just focus it and exit.
+The app is single-instance (`tauri-plugin-single-instance`, registered first in the builder): a second launch exits immediately and focuses the running one. Dev and release builds share the same identifier, so quit the installed copy from the tray before `npm run tauri dev`, or the dev build will just focus it and exit. Window size/position persist via `tauri-plugin-window-state` in `%APPDATA%\io.github.hanchanghun.claude-usage\.window-state.json`; delete that file to reset.
 
 ## Releasing
 
