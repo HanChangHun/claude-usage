@@ -1,6 +1,6 @@
 [package]
 name = "claude-usage-app"
-version = "0.4.1"
+version = "0.4.2"
 description = "Claude.ai quota widget — desktop"
 authors = ["Han Changhun"]
 edition = "2021"
@@ -14,6 +14,7 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-single-instance = "2"
 tauri-plugin-autostart = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-dialog = "2"
