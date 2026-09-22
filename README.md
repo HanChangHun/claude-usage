@@ -34,7 +34,7 @@ If this saves you a few quota checks, a GitHub star helps other Claude users fin
 - **🪟 Compact 440×420 Window** — Clean dark widget that stays out of the way. Remembers its size and position between launches.
 - **🎯 System Tray** — Left-click for window, right-click for menu. Closing the window hides it to the tray instead of quitting. Launching a second copy just brings the existing window to the front.
 - **📌 Keep on Top** — Pin the widget above other windows with the pin button in the titlebar. Remembered between launches.
-- **📦 Tiny Footprint** — ~5 MB MSI, ~50 MB runtime memory.
+- **📦 Tiny Footprint** — ~5 MB installer, ~50 MB runtime memory.
 
 ### ⚙️ Settings Panel
 
@@ -42,20 +42,22 @@ Gear icon, top right:
 
 - **🚀 Start with Windows** — Toggle autostart; the app sits silently in the tray after login.
 - **🔓 Sign out of claude.ai** — Clears the embedded webview session and re-prompts for login.
-- **🔄 Check for updates** — Manual trigger; otherwise checked automatically on startup.
+- **🔄 Check for updates** — Manual trigger; otherwise checked automatically on startup and once a day.
 - **☕ Support on Ko-fi** — If the widget saves you time, [a coffee](https://ko-fi.com/edgetpu) keeps it maintained.
 
 ### 🛡️ Secure Auto-Update
 
 - **🔐 Ed25519 Signature Verification** — Every update is verified against an embedded public key before installing. Private key never leaves the maintainer's machine.
 - **📥 GitHub Releases Only** — Updater talks to one endpoint and nothing else.
-- **🎯 Silent Install** — After the first MSI install, future versions land on the next launch — no more re-installs.
+- **🎯 Silent Install** — Installs per-user, no admin prompt. After the first install, future versions land on the next launch — no more re-installs.
 
 ---
 
 ## ⬇️ Install (Windows)
 
-1. Download the latest **MSI** from [Releases](https://github.com/HanChangHun/claude-usage/releases/latest).
+> **Upgrading from v0.4.5 or older (MSI)?** The old MSI is a separate per-machine install: uninstall *Claude Usage* from **Apps & features** once, then run the new setup. Your sign-in, settings and window position are kept.
+
+1. Download the latest **setup .exe** from [Releases](https://github.com/HanChangHun/claude-usage/releases/latest).
 2. Double-click → **More info → Run anyway** (Windows SmartScreen will warn about an unknown publisher; the binary isn't code-signed).
 3. Done. The widget appears in your tray; sign in to claude.ai once when prompted.
 
@@ -102,7 +104,7 @@ git clone https://github.com/HanChangHun/claude-usage
 cd claude-usage/app
 npm install
 npm run tauri dev          # dev mode
-npm run tauri build        # release MSI in src-tauri/target/release/bundle/msi/
+npm run tauri build        # release installer in src-tauri/target/release/bundle/nsis/
 ```
 
 Requires Rust 1.95+, Node 20+, Visual Studio Build Tools 2022 with the **Desktop development with C++** workload.
@@ -118,7 +120,7 @@ cd app
 .\release.ps1 -Notes "What changed in this release"
 ```
 
-`release.ps1` reads `app/.env` (gitignored), runs `tauri build`, copies the signed MSI + `.msi.sig` to `app/installers/`, and generates `app/installers/latest.json` automatically (signature included). Upload all three — MSI, `.msi.sig`, and `latest.json` — to the matching GitHub release tag. See [CLAUDE.md](CLAUDE.md#releasing) for the full step-by-step.
+`release.ps1` reads `app/.env` (gitignored), runs `tauri build`, copies the signed setup `.exe` + `.sig` to `app/installers/`, and generates `app/installers/latest.json` automatically (signature included). Upload all three — the setup `.exe`, its `.sig`, and `latest.json` — to the matching GitHub release tag. See [CLAUDE.md](CLAUDE.md#releasing) for the full step-by-step.
 
 ---
 

@@ -4,7 +4,7 @@ Guidance for AI assistants (and humans) working in this repo. Keep it short and 
 
 ## What this is
 
-**Claude Usage** — a Windows desktop widget that shows your live claude.ai quota (Session/Weekly plus per-model weekly limits, rendered dynamically from the API's `limits` array). Tauri 2 + Rust backend + a tiny vanilla-JS frontend, distributed as a signed MSI with an in-app auto-updater. Windows-only (uses system WebView2). End-user docs live in [README.md](README.md); this file is about working on the code.
+**Claude Usage** — a Windows desktop widget that shows your live claude.ai quota (Session/Weekly plus per-model weekly limits, rendered dynamically from the API's `limits` array). Tauri 2 + Rust backend + a tiny vanilla-JS frontend, distributed as a signed per-user NSIS installer with an in-app auto-updater. Windows-only (uses system WebView2). End-user docs live in [README.md](README.md); this file is about working on the code.
 
 ## Layout
 
@@ -22,12 +22,12 @@ Guidance for AI assistants (and humans) working in this repo. Keep it short and 
 cd app
 npm install
 npm run tauri dev      # run locally
-npm run tauri build    # release MSI -> src-tauri/target/release/bundle/msi/
+npm run tauri build    # release installer -> src-tauri/target/release/bundle/nsis/
 ```
 
 Requires Rust 1.95+, Node 20+, and Visual Studio Build Tools 2022 with the **Desktop development with C++** workload. There is no frontend build — edit `app/src/*` directly.
 
-The app is single-instance (`tauri-plugin-single-instance`, registered first in the builder): a second launch exits immediately and focuses the running one. Dev and release builds share the same identifier, so quit the installed copy from the tray before `npm run tauri dev`, or the dev build will just focus it and exit. Window size/position persist via `tauri-plugin-window-state` in `%APPDATA%\io.github.hanchanghun.claude-usage\.window-state.json`; delete that file to reset.
+The app is single-instance (`tauri-plugin-single-instance`, registered first in the builder): a second launch exits immediately and focuses the running one. Dev and release builds share the same identifier, so quit the installed copy from the tray before `npm run tauri dev`, or the dev build will just focus it and exit. Window size/position persist via `tauri-plugin-window-state` in `%APPDATA%\io.github.hanchanghun.claude-usage\.window-state.json`; delete that file to reset. The installer is per-user (`%LOCALAPPDATA%\Claude Usage`, no admin prompt); the updater's temp folders `%TEMP%\Claude Usage-*-updater-*` are swept at launch.
 
 ## Releasing
 
@@ -47,7 +47,7 @@ The release is a manual local build+sign+publish (no CI). Signing config lives i
    cd app
    .\release.ps1 -Notes "What changed in this release"
    ```
-   This builds + signs the MSI, copies artifacts to `app/installers/`, and writes `app/installers/latest.json` (UTF-8 **without BOM**, signature read straight from the `.sig`). `release.ps1` expands `$HOME` in the `.env` key path, so either `$HOME\.tauri\...` or an absolute path works.
+   This builds + signs the installer (`Claude Usage_X.Y.Z_x64-setup.exe`), copies it to `app/installers/` as `claude-usage_X.Y.Z_x64-setup.exe` + `.sig`, and writes `app/installers/latest.json` (UTF-8 **without BOM**, signature read straight from the `.sig`). `release.ps1` expands `$HOME` in the `.env` key path, so either `$HOME\.tauri\...` or an absolute path works.
 
 3. **Commit + tag + push:**
    ```bash
@@ -57,8 +57,8 @@ The release is a manual local build+sign+publish (no CI). Signing config lives i
 4. **Publish the GitHub release with all three assets:**
    ```powershell
    gh release create vX.Y.Z --title "..." --notes "..." `
-     installers\claude-usage_X.Y.Z_x64.msi `
-     installers\claude-usage_X.Y.Z_x64.msi.sig `
+     installers\claude-usage_X.Y.Z_x64-setup.exe `
+     installers\claude-usage_X.Y.Z_x64-setup.exe.sig `
      installers\latest.json
    ```
 
@@ -72,6 +72,7 @@ The release is a manual local build+sign+publish (no CI). Signing config lives i
 
 - The **private** key is at `$HOME\.tauri\claude-usage-app.key`; its password is in `app/.env`. The matching **public** key is committed in `tauri.conf.json`. **Rotating the signing key breaks auto-update for every existing user** (they must reinstall once) — avoid it.
 - `latest.json` must be UTF-8 **without a BOM** (the updater's `serde_json` parse rejects a leading BOM). Let `release.ps1` generate it; never hand-edit the base64 signature.
+- v0.4.6 moved from a per-machine MSI to a per-user NSIS installer. An MSI install (≤ v0.4.5) is a different Windows program: it must be uninstalled once from Apps & features before the setup exe is installed (app data under `%APPDATA%`/`%LOCALAPPDATA%\io.github.hanchanghun.claude-usage` survives). Don't publish an MSI under the same updater endpoint again.
 
 ## Conventions
 

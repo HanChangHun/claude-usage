@@ -157,6 +157,12 @@ pub fn run() {
                 .autolaunch()
                 .is_enabled()
                 .unwrap_or(false);
+            // The Run entry stores an absolute exe path and survives an MSI
+            // uninstall, so a pre-0.4.6 Program Files path would be left
+            // silently broken; re-enabling rewrites it to the current exe.
+            if autostart_enabled {
+                let _ = app.autolaunch().enable();
+            }
             let autostart_item = CheckMenuItem::with_id(
                 app,
                 "autostart",
@@ -222,6 +228,7 @@ pub fn run() {
                 }
             });
 
+            std::thread::spawn(cleanup_stale_updater_temp_dirs);
             Ok(())
         })
         .on_window_event(|window, event| match event {
@@ -639,6 +646,27 @@ async fn fetch_usage(app: &AppHandle, from_poll: bool) {
         }
         Err(e) => {
             emit_status(app, "error", Some(format!("network: {}", e)));
+        }
+    }
+}
+
+// The updater extracts each downloaded installer into %TEMP% and never removes
+// it afterward (tauri-apps/tauri#11862, unfixed upstream), so every update
+// leaves a few MB behind. Every matching folder here is stale, or still locked
+// by the installer that just relaunched us; a failed removal is swept on the
+// next launch.
+fn cleanup_stale_updater_temp_dirs() {
+    let Ok(entries) = std::fs::read_dir(std::env::temp_dir()) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        if name.starts_with("Claude Usage-")
+            && name.contains("-updater-")
+            && entry.path().is_dir()
+        {
+            let _ = std::fs::remove_dir_all(entry.path());
         }
     }
 }

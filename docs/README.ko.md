@@ -34,7 +34,7 @@
 - **🪟 440×420 컴팩트 윈도우** — 데스크톱을 차지하지 않는 깔끔한 다크 위젯. 창 크기와 위치를 기억해 다음 실행 때 그대로 열려요.
 - **🎯 시스템 트레이** — 좌클릭으로 윈도우, 우클릭으로 메뉴. 창을 닫으면 종료되지 않고 트레이로 숨어요. 이미 실행 중일 때 다시 실행하면 새로 켜지지 않고 기존 창이 앞으로 와요.
 - **📌 항상 위에 표시** — 타이틀바의 핀 버튼으로 위젯을 다른 창 위에 고정해요. 다음 실행 때도 고정 상태가 유지돼요.
-- **📦 가벼운 사이즈** — MSI ~5 MB, 런타임 메모리 ~50 MB.
+- **📦 가벼운 사이즈** — 설치 파일 ~5 MB, 런타임 메모리 ~50 MB.
 
 ### ⚙️ 설정 패널
 
@@ -42,20 +42,22 @@
 
 - **🚀 Windows 시작 시 실행** — 자동 시작 토글; 로그인 후 트레이에 조용히 자리잡습니다.
 - **🔓 claude.ai 로그아웃** — 임베디드 웹뷰 세션을 비우고 다시 로그인 화면을 띄웁니다.
-- **🔄 업데이트 확인** — 수동 트리거; 평소엔 시작 시 자동으로 체크합니다.
+- **🔄 업데이트 확인** — 수동 트리거; 평소엔 시작 시와 하루 한 번 자동으로 체크합니다.
 - **☕ Ko-fi 후원** — 이 위젯이 시간을 아껴줬다면 [커피 한 잔](https://ko-fi.com/edgetpu)이 유지보수에 힘이 됩니다.
 
 ### 🛡️ 안전한 자동 업데이트
 
 - **🔐 Ed25519 서명 검증** — 모든 업데이트는 임베디드 공개 키로 서명을 검증한 뒤에야 설치됩니다. 개인 키는 메인테이너 머신을 떠나지 않아요.
 - **📥 GitHub Releases만** — 업데이터는 단 하나의 엔드포인트만 사용합니다.
-- **🎯 무중단 설치** — 첫 MSI 설치 이후 새 버전은 다음 실행 시 자동 적용 — 재설치 없음.
+- **🎯 무중단 설치** — 관리자 권한 없이 사용자별로 설치돼요. 첫 설치 이후 새 버전은 다음 실행 시 자동 적용 — 재설치 없음.
 
 ---
 
 ## ⬇️ 설치 (Windows)
 
-1. [Releases](https://github.com/HanChangHun/claude-usage/releases/latest)에서 최신 **MSI** 다운로드.
+> **v0.4.5 이하(MSI)에서 올라오시나요?** 예전 MSI는 별개의 시스템 전체 설치라서, **앱 및 기능**에서 *Claude Usage*를 한 번 제거한 뒤 새 설치 파일을 실행하세요. 로그인, 설정, 창 위치는 그대로 유지돼요.
+
+1. [Releases](https://github.com/HanChangHun/claude-usage/releases/latest)에서 최신 **설치 파일(setup .exe)** 다운로드.
 2. 더블클릭 → **추가 정보 → 실행**을 누르세요 (코드 사이닝 안 된 바이너리라 Windows SmartScreen이 경고합니다).
 3. 끝. 트레이에 위젯이 뜨고, 처음 한 번 claude.ai에 로그인하면 됩니다.
 
@@ -102,7 +104,7 @@ git clone https://github.com/HanChangHun/claude-usage
 cd claude-usage/app
 npm install
 npm run tauri dev          # 개발 모드
-npm run tauri build        # 릴리스 MSI (src-tauri/target/release/bundle/msi/)
+npm run tauri build        # 릴리스 설치 파일 (src-tauri/target/release/bundle/nsis/)
 ```
 
 Rust 1.95+, Node 20+, Visual Studio Build Tools 2022의 **C++를 사용한 데스크톱 개발** 워크로드가 필요합니다.
@@ -118,7 +120,7 @@ cd app
 .\release.ps1 -Notes "이번 릴리스 변경 사항"
 ```
 
-`release.ps1`은 `app/.env`(gitignored)를 읽어 `tauri build`를 실행하고, 서명된 MSI + `.msi.sig`를 `app/installers/`에 복사한 뒤 `app/installers/latest.json`까지 자동 생성합니다(서명 포함). MSI, `.msi.sig`, `latest.json` 세 파일을 해당 버전 태그의 GitHub 릴리스에 업로드하세요. 전체 단계는 [CLAUDE.md](../CLAUDE.md#releasing) 참조.
+`release.ps1`은 `app/.env`(gitignored)를 읽어 `tauri build`를 실행하고, 서명된 설치 파일 `.exe` + `.sig`를 `app/installers/`에 복사한 뒤 `app/installers/latest.json`까지 자동 생성합니다(서명 포함). 설치 파일 `.exe`, `.sig`, `latest.json` 세 파일을 해당 버전 태그의 GitHub 릴리스에 업로드하세요. 전체 단계는 [CLAUDE.md](../CLAUDE.md#releasing) 참조.
 
 ---
 

@@ -34,7 +34,7 @@
 - **🪟 紧凑的 440×420 窗口** — 简洁的深色小工具,不会占据桌面空间。会记住窗口大小和位置,下次启动时原样打开。
 - **🎯 系统托盘** — 左键点击打开窗口,右键点击显示菜单。关闭窗口时隐藏到托盘,程序不退出。再次启动时不会新开一份,只会把已打开的窗口带到前台。
 - **📌 置顶显示** — 用标题栏的图钉按钮把小工具固定在其他窗口之上,下次启动时仍保持置顶。
-- **📦 轻量** — MSI 约 5 MB,运行时内存约 50 MB。
+- **📦 轻量** — 安装包约 5 MB,运行时内存约 50 MB。
 
 ### ⚙️ 设置面板
 
@@ -42,20 +42,22 @@
 
 - **🚀 开机自启** — 切换自动启动;登录后静静驻留托盘。
 - **🔓 退出 claude.ai** — 清除内嵌 WebView 会话,重新提示登录。
-- **🔄 检查更新** — 手动触发;否则启动时自动检查。
+- **🔄 检查更新** — 手动触发;否则在启动时和每天自动检查一次。
 - **☕ Ko-fi 赞助** — 如果这个小工具帮你省了时间,欢迎[请开发者喝杯咖啡](https://ko-fi.com/edgetpu)。
 
 ### 🛡️ 安全自动更新
 
 - **🔐 Ed25519 签名验证** — 每次更新在安装前都通过内嵌公钥验证签名。私钥永不离开维护者的机器。
 - **📥 仅 GitHub Releases** — 更新器只与一个端点通信。
-- **🎯 静默安装** — 首次 MSI 安装后,后续版本在下次启动时自动应用 — 无需重新安装。
+- **🎯 静默安装** — 按用户安装,无需管理员权限;首次安装后,后续版本在下次启动时自动应用 — 无需重新安装。
 
 ---
 
 ## ⬇️ 安装 (Windows)
 
-1. 从 [Releases](https://github.com/HanChangHun/claude-usage/releases/latest) 下载最新 **MSI**。
+> **从 v0.4.5 或更早的 MSI 版本升级?** 旧的 MSI 是单独的全机安装:请先在**应用和功能**中卸载一次 *Claude Usage*,再运行新的安装程序。登录状态、设置和窗口位置都会保留。
+
+1. 从 [Releases](https://github.com/HanChangHun/claude-usage/releases/latest) 下载最新的 **安装程序(setup .exe)**。
 2. 双击 → **更多信息 → 仍要运行**(由于二进制文件未代码签名,Windows SmartScreen 会发出警告)。
 3. 完成。托盘中会出现小工具;按提示登录 claude.ai 一次即可。
 
@@ -102,7 +104,7 @@ git clone https://github.com/HanChangHun/claude-usage
 cd claude-usage/app
 npm install
 npm run tauri dev          # 开发模式
-npm run tauri build        # 发布 MSI (src-tauri/target/release/bundle/msi/)
+npm run tauri build        # 发布安装程序 (src-tauri/target/release/bundle/nsis/)
 ```
 
 需要 Rust 1.95+、Node 20+、Visual Studio Build Tools 2022 的 **使用 C++ 的桌面开发** 工作负载。
@@ -118,7 +120,7 @@ cd app
 .\release.ps1 -Notes "本次发布的变更内容"
 ```
 
-`release.ps1` 读取 `app/.env`(已 gitignore),运行 `tauri build`,将签名后的 MSI + `.msi.sig` 复制到 `app/installers/`,并自动生成 `app/installers/latest.json`(含签名)。将 MSI、`.msi.sig` 和 `latest.json` 三个文件上传到对应版本标签的 GitHub release。完整步骤参见 [CLAUDE.md](../CLAUDE.md#releasing)。
+`release.ps1` 读取 `app/.env`(已 gitignore),运行 `tauri build`,将签名后的安装程序 `.exe` + `.sig` 复制到 `app/installers/`,并自动生成 `app/installers/latest.json`(含签名)。将安装程序 `.exe`、`.sig` 和 `latest.json` 三个文件上传到对应版本标签的 GitHub release。完整步骤参见 [CLAUDE.md](../CLAUDE.md#releasing)。
 
 ---
 

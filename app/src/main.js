@@ -355,6 +355,9 @@ syncAutostartToggle();
 
 // Silent update check on startup (delay 5s so the user sees their data first)
 setTimeout(() => checkForUpdates(false), 5000);
+// The widget tends to stay open for days — re-check daily so updates land
+// without a restart.
+setInterval(() => checkForUpdates(false), 24 * 60 * 60 * 1000);
 
 // ---- Window controls (frameless custom titlebar) -----------------------
 {
