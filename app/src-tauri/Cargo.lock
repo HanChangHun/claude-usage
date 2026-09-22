@@ -484,7 +484,7 @@ dependencies = [
 
 [[package]]
 name = "claude-usage-app"
-version = "0.4.4"
+version = "0.4.5"
 dependencies = [
  "open",
  "reqwest 0.12.28",

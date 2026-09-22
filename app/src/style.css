@@ -470,5 +470,18 @@ html, body {
   color: #1A1917;
 }
 
+/* Always-on-top pin: outline while off, filled accent while pinned. */
+.icon-btn.pin-btn.on {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(217, 119, 87, 0.12);
+}
+.icon-btn.pin-btn.on svg { fill: currentColor; }
+.icon-btn.pin-btn.on:hover:not(:disabled) {
+  color: var(--accent-strong);
+  border-color: var(--accent-strong);
+  background: rgba(217, 119, 87, 0.2);
+}
+
 /* 드래그 데드스팟 방지: 별 마크 클릭이 drag-region 인 .brand 로 전달되게 */
 .brand-mark { pointer-events: none; }

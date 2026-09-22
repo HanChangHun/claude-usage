@@ -362,4 +362,32 @@ setTimeout(() => checkForUpdates(false), 5000);
   // close = close-to-tray: Rust 쪽 CloseRequested 핸들러가 hide 로 바꿔준다.
   document.getElementById('winMinBtn')?.addEventListener('click', () => appWindow.minimize());
   document.getElementById('winCloseBtn')?.addEventListener('click', () => appWindow.close());
+
+  // Always-on-top pin — remembered across launches in localStorage, like the
+  // Codex toggle. The UI and the saved value only change once the window
+  // call succeeded, so the button never claims a state the window isn't in.
+  // The accessible name stays fixed; aria-pressed carries the state.
+  const PIN_KEY = 'always-on-top';
+  const pinBtn = document.getElementById('winPinBtn');
+  let pinBusy = false; // drop clicks that land while the window call is in flight
+  async function applyPin(on) {
+    if (pinBusy) return;
+    pinBusy = true;
+    try {
+      await appWindow.setAlwaysOnTop(on);
+    } catch (e) {
+      console.warn('setAlwaysOnTop failed', e);
+      return;
+    } finally {
+      pinBusy = false;
+    }
+    pinBtn.classList.toggle('on', on);
+    pinBtn.setAttribute('aria-pressed', String(on));
+    pinBtn.title = on ? 'Unpin from top' : 'Keep on top';
+    try { localStorage.setItem(PIN_KEY, String(on)); } catch (e) { /* ignore */ }
+  }
+  pinBtn?.addEventListener('click', () => applyPin(!pinBtn.classList.contains('on')));
+  let pinned = false;
+  try { pinned = localStorage.getItem(PIN_KEY) === 'true'; } catch (e) { /* ignore */ }
+  if (pinned && pinBtn) applyPin(true);
 }
