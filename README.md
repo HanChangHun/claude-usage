@@ -40,6 +40,7 @@ If this saves you a few quota checks, a GitHub star helps other Claude users fin
 
 Gear icon, top right:
 
+- **Account details** — View the signed-in Claude and enabled Codex account email and reported subscription plan in Settings.
 - **🚀 Start with Windows** — Toggle autostart; the app sits silently in the tray after login.
 - **🔓 Sign out of claude.ai** — Clears the embedded webview session and re-prompts for login.
 - **🔄 Check for updates** — Manual trigger; otherwise checked automatically on startup and once a day.

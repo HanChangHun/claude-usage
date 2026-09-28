@@ -1,3 +1,5 @@
+import { renderAccount } from './account.js';
+
 // Codex reports up to two windows per bucket: a 5-hour session window (Plus
 // and similar plans) and the 7-day weekly window. A row is shown only for a
 // window the account actually reports, so plans without a session limit keep
@@ -29,6 +31,7 @@ export async function initCodex({ renderRow }) {
   const toggle = get('codexToggle');
   const status = get('codexStatus');
   const rows = get('codexRows');
+  const account = get('codexAccount');
   let enabled = localStorage.getItem('codex-usage-enabled') === 'true';
   let generation = 0;
   let inFlight = false;
@@ -43,12 +46,14 @@ export async function initCodex({ renderRow }) {
     try {
       const usage = await window.__TAURI__.core.invoke('read_codex_usage');
       if (!enabled || requestGeneration !== generation) return;
+      account.innerHTML = renderAccount(usage.account, 'Codex');
       const limits = codexLimits(usage);
       rows.innerHTML = limits.map(limit => renderRow(limit.label, limit)).join('');
       status.classList.toggle('hidden', limits.length > 0);
       status.textContent = 'No Codex limits reported. Check your ChatGPT login in Codex CLI, then use the top refresh button.';
     } catch (error) {
       if (!enabled || requestGeneration !== generation) return;
+      account.replaceChildren();
       rows.replaceChildren();
       status.classList.remove('hidden');
       status.dataset.state = 'error';
@@ -66,6 +71,7 @@ export async function initCodex({ renderRow }) {
     generation += 1;
     localStorage.setItem('codex-usage-enabled', String(enabled));
     get('codexSection').classList.toggle('hidden', !enabled);
+    account.replaceChildren();
     rows.replaceChildren();
     if (enabled) void refresh();
   });

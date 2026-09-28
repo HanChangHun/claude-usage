@@ -2,6 +2,7 @@
 // and renders the widget. Uses globals exposed by `withGlobalTauri: true`.
 
 import { initCodex } from './codex.js';
+import { renderAccount } from './account.js';
 
 const { event, core } = window.__TAURI__;
 // Plugin imports (loaded dynamically; available because withGlobalTauri exposes them)
@@ -95,6 +96,7 @@ function renderRow(label, limit) {
 function renderWidget(payload) {
   const { data, ts } = payload;
   const widget = $('widget');
+  $('claudeAccount').innerHTML = renderAccount(payload.account, 'Claude');
   const rows = [];
   if (Array.isArray(data.limits) && data.limits.length > 0) {
     for (const l of data.limits) {
@@ -146,6 +148,9 @@ function tickCountdowns() {
 function applyStatus(status) {
   if (!status) return;
   statusState = status.state;
+  if (status.state === 'logged_out' || status.state === 'error') {
+    $('claudeAccount').replaceChildren();
+  }
   if (status.state === 'logged_out') {
     if (!lastPayload) {
       $('emptyState')?.classList.remove('hidden');

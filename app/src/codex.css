@@ -22,3 +22,8 @@ button:focus-visible, input:focus-visible + .toggle-slider { outline: 2px solid 
   .brand { font-size: 0.88rem; gap: 0.3rem; }
   .win-sep { margin: 0; }
 }
+.account-info { display: flex; align-items: baseline; gap: 0.6rem; min-width: 0; font-size: 0.74rem; line-height: 1.5; color: var(--text-muted); }
+.account-provider { flex-shrink: 0; white-space: nowrap; }
+.account-email { min-width: 0; margin-left: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); user-select: text; }
+.settings-accounts { display: flex; flex-direction: column; gap: 0.6rem; }
+.settings-accounts:has(.account-info) { margin-bottom: 1rem; }

@@ -11,8 +11,24 @@ static QUERY: Mutex<()> = Mutex::const_new(());
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Usage {
+    #[serde(default)]
+    account: Option<Account>,
     rate_limits: Option<Bucket>,
     rate_limits_by_limit_id: Option<BTreeMap<String, Bucket>>,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Account {
+    #[serde(rename = "type")]
+    kind: String,
+    email: Option<String>,
+    plan_type: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct AccountReply {
+    account: Option<Account>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -149,10 +165,21 @@ pub async fn read_codex_usage() -> Result<Usage, String> {
         receive::<serde::de::IgnoredAny>(&mut output, 1).await?;
         send(
             &mut input,
-            "{\"method\":\"initialized\"}\n{\"id\":2,\"method\":\"account/rateLimits/read\"}\n",
+            "{\"method\":\"initialized\"}\n{\"id\":2,\"method\":\"account/read\",\"params\":{\"refreshToken\":false}}\n",
         )
         .await?;
-        receive::<Usage>(&mut output, 2).await
+        let account = receive::<AccountReply>(&mut output, 2)
+            .await
+            .ok()
+            .and_then(|reply| reply.account);
+        send(
+            &mut input,
+            "{\"id\":3,\"method\":\"account/rateLimits/read\"}\n",
+        )
+        .await?;
+        let mut usage = receive::<Usage>(&mut output, 3).await?;
+        usage.account = account;
+        Ok(usage)
     })
     .await;
     let _ = child.kill().await;

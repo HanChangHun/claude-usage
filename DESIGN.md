@@ -9,7 +9,7 @@ Reuse `row`, `row-head`, `label`, `pct`, `reset`, `bar`, `fill`, `toggle`, and
 Codex is an optional section in the scrollable usage area, enabled in Settings.
 Its requests and errors are independent of Claude, triggered by the shared backend refresh signal. Default is off;
 the choice persists locally. Disabling clears displayed data and stops polling.
-Only the main Codex seven-day window is shown; omit Spark and session limits.
+Show the main Codex seven-day window and the five-hour window when reported; omit Spark.
 Preserve the existing Claude API-driven rows: the user's current account reports
 Session (5h), Weekly (all models), and Fable weekly. Do not inject legacy Opus or
 Sonnet rows. These three plus one compact Codex weekly row must fit at 440x420
@@ -29,3 +29,16 @@ status changes use an aria-live region. Respect reduced motion.
 Accepted existing scope: Claude rendering, fonts, update flow and authentication
 remain as implemented. This feature does not redesign the application or add a
 web dashboard. Validate native WebView2 behavior and small-window overflow.
+
+Account identity appears only inside the Settings panel, before its toggles.
+The default usage screen contains no email, account label, or plan label.
+The shared `account-info` primitive shows provider and reported plan on the left,
+email on the right, using `--text-muted`, `--text`, and 0.74rem helper typography.
+Use 0.6rem between account lines and 1rem before the settings controls.
+Long emails truncate with an ellipsis; the full address remains available in a
+tooltip and accessible text. No new controls, dividers, or animation are needed.
+Claude identity comes from the widget's claude.ai session and the organization
+whose usage is queried. Codex identity comes from the same CLI app-server process
+as its quota. Refresh identity with usage; clear it on sign-out, errors, or disable.
+An unavailable profile must not prevent quota display or imply a guessed plan.
+Emails are rendered as text, kept in memory, and never persisted or logged.

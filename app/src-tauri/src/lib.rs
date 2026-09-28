@@ -1,7 +1,8 @@
+mod claude_account;
 mod codex;
 
 use serde::Serialize;
-use std::sync::atomic::{AtomicI64, AtomicU32, Ordering};
+use std::sync::atomic::{AtomicI64, AtomicU32, AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::{
@@ -40,6 +41,7 @@ const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
     (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0";
 
 struct LoginFailures(AtomicU32);
+struct SessionGeneration(AtomicU64);
 
 /// Unix seconds when the sign-in window was last surfaced, by any path
 /// (0 = never). Read by the auto-popup cooldown check.
@@ -74,6 +76,7 @@ fn http_client() -> &'static reqwest::Client {
 struct UsageEvent {
     ts: i64,
     data: serde_json::Value,
+    account: Option<claude_account::Account>,
 }
 
 #[derive(Serialize, Clone)]
@@ -113,6 +116,7 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .setup(|app| {
             app.manage(LoginFailures(AtomicU32::new(0)));
+            app.manage(SessionGeneration(AtomicU64::new(0)));
             app.manage(LastLoginPopup(AtomicI64::new(0)));
             app.manage(OrgState(Mutex::new(OrgIds::default())));
 
@@ -347,6 +351,7 @@ fn toggle_autostart(app: &AppHandle) -> bool {
 /// the embedded webview to the logout URL. The user can then sign in
 /// again with a different account, or close the window.
 fn sign_out(app: AppHandle) {
+    app.state::<SessionGeneration>().0.fetch_add(1, Ordering::SeqCst);
     let Some(claude) = app.get_webview_window("claude") else {
         return;
     };
@@ -514,6 +519,7 @@ fn reject_org_id(app: &AppHandle, org_id: &str) {
 
 /// `from_poll` marks the 60s background loop (vs. a user-initiated refresh).
 async fn fetch_usage(app: &AppHandle, from_poll: bool) {
+    let generation = app.state::<SessionGeneration>().0.load(Ordering::SeqCst);
     let _ = app.emit_to("main", "codex-refresh", ());
     let claude = match app.get_webview_window("claude") {
         Some(w) => w,
@@ -593,12 +599,15 @@ async fn fetch_usage(app: &AppHandle, from_poll: bool) {
 
     let api_url = format!("https://claude.ai/api/organizations/{}/usage", org_id);
 
-    let result = http_client()
+    let usage_request = http_client()
         .get(&api_url)
-        .header("Cookie", cookie_header)
+        .header("Cookie", &cookie_header)
         .header("Accept", "application/json")
-        .send()
-        .await;
+        .send();
+    let (result, account) = tokio::join!(
+        usage_request,
+        claude_account::read(http_client(), &cookie_header, &org_id)
+    );
 
     match result {
         Ok(r) => {
@@ -606,6 +615,9 @@ async fn fetch_usage(app: &AppHandle, from_poll: bool) {
             if status.is_success() {
                 match r.json::<serde_json::Value>().await {
                     Ok(json) => {
+                        if app.state::<SessionGeneration>().0.load(Ordering::SeqCst) != generation {
+                            return;
+                        }
                         app.state::<LoginFailures>().0.store(0, Ordering::SeqCst);
                         if let Ok(mut org) = app.state::<OrgState>().0.lock() {
                             org.cached = Some(org_id.clone());
@@ -619,6 +631,7 @@ async fn fetch_usage(app: &AppHandle, from_poll: bool) {
                             UsageEvent {
                                 ts: now_ms(),
                                 data: json,
+                                account,
                             },
                         );
                         emit_status(app, "logged_in", None);
