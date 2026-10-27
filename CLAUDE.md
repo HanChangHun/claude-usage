@@ -11,6 +11,7 @@ Guidance for AI assistants (and humans) working in this repo. Keep it short and 
 - **`app/`** — the Tauri app; all development happens here.
   - `app/src/` — frontend: `index.html`, `style.css`, `main.js`. **Plain vanilla JS, no bundler/build step** — `frontendDist` points at this raw folder, so edits show up on reload. The frontend talks to the backend via `window.__TAURI__` globals (`withGlobalTauri: true`).
   - `app/src-tauri/src/lib.rs` — Rust backend: the 60-second quota poll loop, the hidden claude.ai webview (cookie host + sign-in surface), the system tray, window creation (incl. `min_inner_size`), and the `#[tauri::command]`s the frontend invokes.
+  - `app/src-tauri/src/alt_tab.rs` keeps only the main widget out of Alt+Tab while preserving its taskbar button. Its Windows subclass handles show/hide, pin changes, Explorer recovery, and teardown. The external `claude` sign-in window is not changed.
   - `app/src-tauri/tauri.conf.json` — Tauri config, including the updater endpoint + **public** signing key.
   - `app/src-tauri/capabilities/default.json` — the permission allowlist for the main window.
 - **`index.html` (repo root) + `assets/`** — the marketing/landing page. **Not** the app UI — don't confuse it with `app/src/index.html`.

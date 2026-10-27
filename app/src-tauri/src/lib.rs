@@ -1,3 +1,5 @@
+#[cfg(target_os = "windows")]
+mod alt_tab;
 mod claude_account;
 mod codex;
 
@@ -139,6 +141,10 @@ pub fn run() {
             // we can't inject controls into an external page.
             .decorations(false)
             .build()?;
+            #[cfg(target_os = "windows")]
+            if let Err(error) = alt_tab::install(main.hwnd()?.0 as isize) {
+                eprintln!("Alt+Tab integration unavailable: {error}");
+            }
             main.show()?;
 
             // ---- Hidden claude.ai webview (cookie host + login surface) ----
