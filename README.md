@@ -32,8 +32,8 @@ If this saves you a few quota checks, a GitHub star helps other Claude users fin
 - **📊 Live Quota Display** — Every limit claude.ai reports, at a glance: Session (5h), all-models weekly, and per-model weekly limits (Opus, Sonnet, Fable, …) — new models appear automatically. Extra-usage balance included.
 - **⏱️ 60-Second Auto-Refresh** — Background loop polls quota every minute; reset countdowns shown next to each limit.
 - **🪟 Compact 440×420 Window** — Clean dark widget that stays out of the way. Remembers its size and position between launches. Shrinks to 300×180, with tighter rows in short windows.
-- **🎯 System Tray** — Left-click for window, right-click for menu. Closing the window hides it to the tray instead of quitting. Launching a second copy just brings the existing window to the front.
-- The widget stays out of **Alt+Tab** while its taskbar button and tray remain available. FancyZones can arrange the widget, and its size and position are restored on the next launch. The sign-in window still appears normally.
+- **🎯 System Tray** — Left-click for window, right-click for menu. Closing or minimizing the window hides it to the tray instead of quitting. Launching a second copy just brings the existing window to the front.
+- The widget stays out of **Alt+Tab and the taskbar**. Restore it from the system tray or by launching the app again. FancyZones can arrange the widget, and its size and position are restored on the next launch. The sign-in window still appears normally.
 - **📌 Keep on Top** — Pin the widget above other windows with the pin button in the titlebar. Remembered between launches.
 - **📦 Tiny Footprint** — ~5 MB installer, ~50 MB runtime memory.
 

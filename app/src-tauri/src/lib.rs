@@ -126,26 +126,21 @@ pub fn run() {
             // Built hidden: the window-state plugin restores the saved geometry
             // while the window is created, so showing afterwards avoids a flash
             // at the default position.
-            let main = WebviewWindowBuilder::new(
-                app,
-                "main",
-                WebviewUrl::App("index.html".into()),
-            )
-            .title("Claude Usage")
-            .inner_size(440.0, 420.0)
-            .min_inner_size(300.0, 180.0)
-            .resizable(true)
-            .visible(false)
-            // Frameless: the in-app topbar is the titlebar (drag region + ─/✕).
-            // The hidden claude.ai window below keeps native decorations —
-            // we can't inject controls into an external page.
-            .decorations(false)
-            .build()?;
+            let main = WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
+                .title("Claude Usage")
+                .inner_size(440.0, 420.0)
+                .min_inner_size(300.0, 180.0)
+                .resizable(true)
+                .visible(false)
+                // Frameless: the in-app topbar is the titlebar (drag region + ─/✕).
+                // The hidden claude.ai window below keeps native decorations —
+                // we can't inject controls into an external page.
+                .decorations(false)
+                .build()?;
             #[cfg(target_os = "windows")]
             if let Err(error) = alt_tab::install(main.hwnd()?.0 as isize) {
                 eprintln!("Alt+Tab integration unavailable: {error}");
             }
-            main.show()?;
 
             // ---- Hidden claude.ai webview (cookie host + login surface) ----
             let _claude = WebviewWindowBuilder::new(
@@ -163,10 +158,7 @@ pub fn run() {
             let refresh_item =
                 MenuItem::with_id(app, "refresh", "Refresh now", true, None::<&str>)?;
             let sep1 = PredefinedMenuItem::separator(app)?;
-            let autostart_enabled = app
-                .autolaunch()
-                .is_enabled()
-                .unwrap_or(false);
+            let autostart_enabled = app.autolaunch().is_enabled().unwrap_or(false);
             // The Run entry stores an absolute exe path and survives an MSI
             // uninstall, so a pre-0.4.6 Program Files path would be left
             // silently broken; re-enabling rewrites it to the current exe.
@@ -238,6 +230,10 @@ pub fn run() {
                 }
             });
 
+            if let Some(main) = app.get_webview_window("main") {
+                main.show()?;
+            }
+
             std::thread::spawn(cleanup_stale_updater_temp_dirs);
             Ok(())
         })
@@ -262,6 +258,11 @@ pub fn run() {
                     app.state::<LoginFailures>().0.store(0, Ordering::SeqCst);
                     trigger_fetch(app);
                 }
+            }
+            tauri::WindowEvent::Resized(_)
+                if window.label() == "main" && window.is_minimized().unwrap_or(false) =>
+            {
+                let _ = window.hide();
             }
             // Also persist whenever the widget loses focus, so the last move or
             // resize survives a Windows shutdown without an explicit Quit.
@@ -315,8 +316,8 @@ fn open_kofi() {
 
 fn show_main(app: &AppHandle) {
     if let Some(w) = app.get_webview_window("main") {
-        let _ = w.show();
         let _ = w.unminimize();
+        let _ = w.show();
         let _ = w.set_focus();
     }
 }
@@ -329,8 +330,8 @@ fn show_claude_login(app: &AppHandle) {
         .0
         .store(now_ms() / 1000, Ordering::SeqCst);
     if let Some(w) = app.get_webview_window("claude") {
-        let _ = w.show();
         let _ = w.unminimize();
+        let _ = w.show();
         let _ = w.set_focus();
     }
 }
@@ -357,7 +358,9 @@ fn toggle_autostart(app: &AppHandle) -> bool {
 /// the embedded webview to the logout URL. The user can then sign in
 /// again with a different account, or close the window.
 fn sign_out(app: AppHandle) {
-    app.state::<SessionGeneration>().0.fetch_add(1, Ordering::SeqCst);
+    app.state::<SessionGeneration>()
+        .0
+        .fetch_add(1, Ordering::SeqCst);
     let Some(claude) = app.get_webview_window("claude") else {
         return;
     };
@@ -539,8 +542,7 @@ async fn fetch_usage(app: &AppHandle, from_poll: bool) {
 
     // cookies_for_url is synchronous and deadlocks the WebView2 thread on Windows
     // when called from a sync context — wrap in spawn_blocking to be safe.
-    let cookies_result =
-        tokio::task::spawn_blocking(move || claude.cookies_for_url(url)).await;
+    let cookies_result = tokio::task::spawn_blocking(move || claude.cookies_for_url(url)).await;
     let cookies = match cookies_result {
         Ok(Ok(c)) => c,
         Ok(Err(e)) => {
@@ -681,9 +683,7 @@ fn cleanup_stale_updater_temp_dirs() {
     for entry in entries.flatten() {
         let name = entry.file_name();
         let name = name.to_string_lossy();
-        if name.starts_with("Claude Usage-")
-            && name.contains("-updater-")
-            && entry.path().is_dir()
+        if name.starts_with("Claude Usage-") && name.contains("-updater-") && entry.path().is_dir()
         {
             let _ = std::fs::remove_dir_all(entry.path());
         }
