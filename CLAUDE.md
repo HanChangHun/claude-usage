@@ -12,7 +12,7 @@ Guidance for AI assistants (and humans) working in this repo. Keep it short and 
   - `app/src/` — frontend: `index.html`, `style.css`, `main.js`. **Plain vanilla JS, no bundler/build step** — `frontendDist` points at this raw folder, so edits show up on reload. The frontend talks to the backend via `window.__TAURI__` globals (`withGlobalTauri: true`).
   - `app/src-tauri/src/lib.rs` — Rust backend: the 60-second quota poll loop, the hidden claude.ai webview (cookie host + sign-in surface), the system tray, window creation (incl. `min_inner_size`), and the `#[tauri::command]`s the frontend invokes.
   - The main widget defaults to 440×420 and can shrink to 300×180. `app/src/style.css` tightens controls and quota rows below 261px high; extra rows and settings stay inside the scrollable content area.
-  - `app/src-tauri/src/alt_tab.rs` keeps only the main widget out of Alt+Tab through a hidden owner window, while preserving its taskbar button and FancyZones eligibility. Its Windows subclass handles show/hide, pin changes, Explorer recovery, and teardown. The existing SIZE | POSITION window-state policy restores geometry before showing the widget. The external `claude` sign-in window is not changed.
+  - `app/src-tauri/src/alt_tab.rs` keeps the main widget out of Alt+Tab and the taskbar with `ITaskbarList::DeleteTab` and a hidden owner window, while preserving FancyZones eligibility. Its Windows subclass handles show/hide, pin changes, Explorer recovery, and teardown. The existing SIZE | POSITION window-state policy restores geometry before showing the widget. The external `claude` sign-in window is not changed.
   - `app/src-tauri/tauri.conf.json` — Tauri config, including the updater endpoint + **public** signing key.
   - `app/src-tauri/capabilities/default.json` — the permission allowlist for the main window.
 - **`index.html` (repo root) + `assets/`** — the marketing/landing page. **Not** the app UI — don't confuse it with `app/src/index.html`.
@@ -80,3 +80,7 @@ The release is a manual local build+sign+publish (no CI). Signing config lives i
 
 - Windows + PowerShell for the release flow; the app itself is Windows-only.
 - Keep changes surgical and the diff small; this is a small, focused widget.
+
+### Native shell validation
+
+Compile `scripts/verify-widget-shell.rs` with `rustc --edition 2021` and run it in an interactive Windows session. It creates only isolated test windows and queries their actual shell switcher flags after show, restore, style changes, minimize and Explorer recreation messages. Its undocumented read-only COM query is diagnostic code, never shipped in the app. Native unit tests separately check FancyZones window eligibility and caption/resize hit testing.
