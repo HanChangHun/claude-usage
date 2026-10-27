@@ -85,7 +85,7 @@ function renderRow(label, limit) {
   return `
     <div class="row">
       <div class="row-head">
-        <span class="label">${esc(label)}</span>
+        <span class="label" title="${esc(label)}">${esc(label)}</span>
         <span class="pct ${cls}">${Math.round(pct)}%</span>
         ${resetAt ? `<span class="reset" title="Resets at ${new Date(resetAt).toLocaleString()}">${clockIcon()}<span data-reset="${resetAt}">${fmtUntil(resetAt)}</span></span>` : ''}
       </div>
@@ -294,6 +294,7 @@ $('settingsBtn').addEventListener('click', () => {
   panel.classList.toggle('hidden');
   if (!panel.classList.contains('hidden')) {
     syncAutostartToggle();
+    panel.scrollIntoView({ block: 'start' });
   }
 });
 
