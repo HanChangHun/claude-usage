@@ -133,7 +133,7 @@ pub fn run() {
             )
             .title("Claude Usage")
             .inner_size(440.0, 420.0)
-            .min_inner_size(300.0, 320.0)
+            .min_inner_size(300.0, 180.0)
             .resizable(true)
             .visible(false)
             // Frameless: the in-app topbar is the titlebar (drag region + ─/✕).

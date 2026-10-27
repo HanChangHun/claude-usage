@@ -277,6 +277,7 @@ html, body {
 }
 
 .toggle {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
@@ -485,3 +486,39 @@ html, body {
 
 /* 드래그 데드스팟 방지: 별 마크 클릭이 drag-region 인 .brand 로 전달되게 */
 .brand-mark { pointer-events: none; }
+
+
+/* Keep four common quota rows readable when widgets are stacked. */
+@media (max-height: 260px) {
+  .app .topbar { padding: 4px 10px; gap: 6px; }
+  .app .brand { font-size: 13px; gap: 5px; }
+  .brand-mark { width: 12px; height: 12px; }
+  .app .topbar-actions { gap: 4px; }
+  .icon-btn { width: 24px; height: 24px; }
+  .icon-btn svg { width: 12px; height: 12px; }
+  .win-sep { height: 14px; margin: 0; }
+  .usage-content .widget { padding: 6px 10px; gap: 7px; }
+  .row { gap: 3px; }
+  .row-head { gap: 6px; flex-wrap: nowrap; line-height: 14.5px; }
+  .row .label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+  .row .pct { flex-shrink: 0; font-size: 12px; }
+  .row .reset { flex-shrink: 0; gap: 3px; font-size: 10.5px; white-space: nowrap; }
+  .row .reset svg { width: 10px; height: 10px; }
+  .bar { height: 4px; }
+  .usage-content .codex-section { padding: 0 10px 6px; }
+  .usage-content .codex-rows { gap: 7px; }
+  .bottombar { padding: 4px 10px; line-height: 13px; }
+  .hint { font-size: 10px; }
+  .tier { margin-top: 1px; padding-top: 6px; font-size: 11px; }
+  .empty { flex: 0 0 auto; min-height: 0; gap: 4px; padding: 8px 0; }
+  .empty .star { width: 16px; height: 16px; margin-bottom: 0; }
+  .empty-title { font-size: 14px; }
+  .empty-msg { max-width: 36ch; font-size: 12px; line-height: 1.35; overflow-wrap: anywhere; }
+  .ghost-btn { margin-top: 4px; padding: 5px 10px; font-size: 11px; }
+  .settings { padding: 10px; gap: 8px; }
+  .settings-btn { padding: 5px 8px; font-size: 11px; }
+  .signin-bar { padding: 5px 10px; font-size: 11px; }
+  .usage-content:has(> .settings:not(.hidden)) > .widget,
+  .usage-content:has(> .settings:not(.hidden)) > .codex-section,
+  .usage-content:has(> .settings:not(.hidden)) > .signin-bar { display: none; }
+}
