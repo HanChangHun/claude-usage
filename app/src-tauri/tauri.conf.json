@@ -40,7 +40,7 @@
       "endpoints": [
         "https://github.com/HanChangHun/claude-usage/releases/latest/download/latest.json"
       ],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDcyRDQ3N0Y0QzM2NDJEQUIKUldTckxXVEQ5SGZVY2czV0hKOUsrdFY0YkVwVG5lNGJyMWRSUVJKN1hOTTdCY0JNOEk4TkFtdVoK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDVENTlGODlDRDlDNzMxREYKUldUZk1jZlpuUGhaWGRzbXc5STdDd1dEdStMK3ZvNkhYVmoxaE1XUlgvMk90QmpZVlZKTnVPd1EK",
       "windows": {
         "installMode": "passive"
       }
