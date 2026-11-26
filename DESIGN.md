@@ -23,6 +23,9 @@ The Codex row follows the same row spacing with no separate divider, refresh but
 The app remains 440x420, supports 300x320 and scrolls when content exceeds space.
 Usage and settings share one scroll container beneath the fixed header. Opening
 settings scrolls them into view; no nested scrollbars or squeezed usage pane.
+Use a slim rounded scrollbar with a transparent track and no arrow buttons.
+Reuse the muted text colors for its thumb, with the accent color while dragging.
+Keep native scrolling behavior and the system scrollbar in high-contrast mode.
 Buttons and toggles remain keyboard accessible;
 status changes use an aria-live region. Respect reduced motion.
 
