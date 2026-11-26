@@ -42,3 +42,13 @@ whose usage is queried. Codex identity comes from the same CLI app-server proces
 as its quota. Refresh identity with usage; clear it on sign-out, errors, or disable.
 An unavailable profile must not prevent quota display or imply a guessed plan.
 Emails are rendered as text, kept in memory, and never persisted or logged.
+
+Antigravity is an optional section below Codex in the scrollable usage area,
+enabled in Settings (default off, persisted locally). It reuses the same row
+components, spacing, error status pattern, and short-window behavior. It shares
+the 60-second background refresh signal and manual/tray refresh with Claude and
+Codex. Show only reported Gemini 5-hour and weekly limits (used percentage
+converted from remaining fraction, omitting Unix epoch placeholder reset times)
+and omit the third-party Claude and GPT model pool. Because
+`agy --print /usage --output-format json` does not report account email or plan,
+omit an Antigravity account line rather than guessing.

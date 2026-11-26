@@ -62,6 +62,11 @@
       <p class="codex-status hidden" id="codexStatus" role="status" aria-live="polite"></p>
     </section>
 
+    <section class="codex-section antigravity-section hidden" id="antigravitySection" aria-label="Antigravity usage">
+      <div class="codex-rows antigravity-rows" id="antigravityRows"></div>
+      <p class="codex-status antigravity-status hidden" id="antigravityStatus" role="status" aria-live="polite"></p>
+    </section>
+
     <div class="signin-bar hidden" id="signinBar">
       <span>Signed out of claude.ai</span>
       <button class="settings-btn primary" id="signinBarBtn" type="button">Sign in</button>
@@ -80,6 +85,14 @@
         </label>
       </div>
       <p class="codex-help">Uses your Codex CLI ChatGPT login. No separate widget sign-in.</p>
+      <div class="settings-row">
+        <label class="toggle">
+          <input type="checkbox" id="antigravityToggle">
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">Show Antigravity usage</span>
+        </label>
+      </div>
+      <p class="codex-help">Uses your Antigravity CLI (agy) Google login. No separate widget sign-in.</p>
       <div class="settings-row">
         <label class="toggle">
           <input type="checkbox" id="autostartToggle">

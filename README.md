@@ -150,3 +150,25 @@ only quota windows and bucket labels reach the widget. No reset credits are used
 Windows native CLI and standard npm installations are discovered automatically;
 for a custom install, set `CODEX_USAGE_CLI` to the native `codex.exe` path before
 launching the widget. Missing windows are shown as unavailable, not 0%.
+
+## Optional Antigravity usage
+
+Enable **Settings → Show Antigravity usage** to add Antigravity (`agy`) Gemini
+subscription limits to the widget. It shows **Gemini session (5h)** and
+**Gemini weekly** used percentages with reset countdowns in the same style as
+Claude and Codex, and omits the third-party Claude and GPT pool. Turning the
+option off clears displayed rows and stops polling.
+
+Install the Antigravity CLI (`agy`) and sign in with your Google account once.
+The widget reuses your existing `agy` login with no separate browser sign-in or
+API key. When enabled, it follows the shared 60-second background refresh and
+updates immediately on the top refresh button or tray Refresh now alongside
+Claude and Codex.
+
+The backend runs `agy --print /usage --output-format json` with
+`AGY_CLI_DISABLE_AUTO_UPDATE=true` and a 30-second timeout. It uses zero model
+turns and zero tokens, reads only quota buckets, and leaves account credentials
+under `agy` control. `agy.exe` is discovered from `PATH` and standard local
+install folders. For a custom path, set `ANTIGRAVITY_USAGE_CLI` before launching
+the widget. Note that Google's consumer terms restrict heavy automated polling
+on personal OAuth sessions, so this provider stays off by default.

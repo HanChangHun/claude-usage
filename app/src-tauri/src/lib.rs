@@ -1,5 +1,6 @@
 #[cfg(target_os = "windows")]
 mod alt_tab;
+mod antigravity;
 mod claude_account;
 mod codex;
 
@@ -272,6 +273,7 @@ pub fn run() {
             _ => {}
         })
         .invoke_handler(tauri::generate_handler![
+            antigravity::read_antigravity_usage,
             codex::read_codex_usage,
             manual_refresh,
             open_login,
@@ -530,6 +532,7 @@ fn reject_org_id(app: &AppHandle, org_id: &str) {
 async fn fetch_usage(app: &AppHandle, from_poll: bool) {
     let generation = app.state::<SessionGeneration>().0.load(Ordering::SeqCst);
     let _ = app.emit_to("main", "codex-refresh", ());
+    let _ = app.emit_to("main", "antigravity-refresh", ());
     let claude = match app.get_webview_window("claude") {
         Some(w) => w,
         None => return,

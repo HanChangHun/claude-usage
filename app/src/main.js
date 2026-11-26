@@ -1,6 +1,7 @@
 // Tauri 2 frontend entry — listens for usage/status events from Rust
 // and renders the widget. Uses globals exposed by `withGlobalTauri: true`.
 
+import { initAntigravity } from './antigravity.js';
 import { initCodex } from './codex.js';
 import { renderAccount } from './account.js';
 
@@ -342,6 +343,7 @@ $('updateDismiss').addEventListener('click', () => {
 // ---------- init ----------
 setInterval(tickCountdowns, 30_000);
 initCodex({ renderRow });
+initAntigravity({ renderRow });
 
 // Initial autostart state sync (without showing the panel)
 syncAutostartToggle();

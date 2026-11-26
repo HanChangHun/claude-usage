@@ -151,3 +151,11 @@ API 키를 입력할 필요가 없습니다. API 키 로그인만으로는 구�
 `CODEX_USAGE_CLI` 환경 변수에 네이티브 `codex.exe` 경로를 지정해 주세요.
 
 계정 이메일과 요금제는 설정 버튼을 눌렀을 때만 표시됩니다. Claude는 이 위젯에 로그인한 claude.ai 계정을, Codex는 Codex CLI에 로그인한 ChatGPT 계정을 사용합니다. 계정 정보는 사용량과 함께 새로 고침되며 디스크에 저장하지 않습니다.
+
+## Antigravity 한도 추가 기능
+
+**설정 → Show Antigravity usage**를 켜면 Antigravity(`agy`)의 **Gemini session (5h)**과 **Gemini weekly** 사용률, 초기화 카운트다운이 표시됩니다. 서드파티 Claude/GPT 모델 풀은 생략합니다. 기본값은 꺼짐이며, 끄면 표시된 행을 지우고 조회를 멈춥니다.
+
+Antigravity CLI(`agy`)를 설치하고 Google 계정으로 한 번 로그인해 두면 기존 CLI 로그인을 그대로 재사용합니다. 기능을 켜면 Claude, Codex와 같은 60초 백그라운드 주기로 자동 갱신되며, 상단 새로고침 버튼이나 트레이의 Refresh now를 누르면 즉시 다시 가져옵니다.
+
+백엔드는 `AGY_CLI_DISABLE_AUTO_UPDATE=true` 환경 변수와 함께 `agy --print /usage --output-format json`을 30초 제한 시간으로 호출합니다. 모델 턴과 토큰을 소모하지 않고 한도 버킷만 읽으며, 실행 파일은 `PATH`와 기본 로컬 설치 경로(`%LOCALAPPDATA%\agy\bin\agy.exe` 등)에서 자동으로 찾습니다. 별도 경로를 쓰려면 `ANTIGRAVITY_USAGE_CLI` 환경 변수를 지정해 주세요. 개인 OAuth 계정의 잦은 자동 폴링은 Google 약관 제한 대상이 될 수 있어 기본 비활성 상태로 제공합니다.

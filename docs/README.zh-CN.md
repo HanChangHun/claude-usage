@@ -128,3 +128,9 @@ cd app
 ## 📝 许可证
 
 MIT © 2026 Han Changhun
+
+## 可选 Antigravity 配额
+
+开启 **Settings → Show Antigravity usage** 即可在小工具中显示 Antigravity (`agy`) 的 **Gemini session (5h)** 与 **Gemini weekly** 已用百分比和重置倒计时，忽略第三方 Claude/GPT 模型池。默认关闭，关闭后清除显示并停止轮询。
+
+先安装 Antigravity CLI (`agy`) 并使用 Google 账号登录一次，小工具直接复用现有 CLI 登录，无需单独登录。开启后与 Claude、Codex 共享每 60 秒自动刷新，点击顶部刷新或托盘 Refresh now 会立即刷新。后端使用 `AGY_CLI_DISABLE_AUTO_UPDATE=true` 调用 `agy --print /usage --output-format json`（不消耗模型轮次或 Token），如需自定义路径可设置环境变量 `ANTIGRAVITY_USAGE_CLI`。
