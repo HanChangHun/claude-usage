@@ -26,6 +26,8 @@ settings scrolls them into view; no nested scrollbars or squeezed usage pane.
 Use a slim rounded scrollbar with a transparent track and no arrow buttons.
 Reuse the muted text colors for its thumb, with the accent color while dragging.
 Keep native scrolling behavior and the system scrollbar in high-contrast mode.
+Hide the thumb when idle outside the content area. Reveal it on hover and for
+one second after scrolling, keeping the scrollbar width fixed to avoid layout shifts.
 Buttons and toggles remain keyboard accessible;
 status changes use an aria-live region. Respect reduced motion.
 

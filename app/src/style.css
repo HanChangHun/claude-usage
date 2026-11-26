@@ -132,6 +132,9 @@ html, body {
 /* Keep the scrollbar quiet while retaining native wheel and drag behavior.
    High-contrast mode uses the system scrollbar. */
 @media (forced-colors: none) {
+  .usage-content { --scrollbar-thumb: transparent; }
+  .usage-content:hover,
+  .usage-content.is-scrolling { --scrollbar-thumb: var(--text-faint); }
   .usage-content::-webkit-scrollbar { width: 10px; height: 10px; }
   .usage-content::-webkit-scrollbar-track {
     background: transparent;
@@ -141,7 +144,7 @@ html, body {
     min-height: 28px;
     border: 2px solid transparent;
     border-radius: 999px;
-    background-color: var(--text-faint);
+    background-color: var(--scrollbar-thumb);
     background-clip: padding-box;
   }
   .usage-content::-webkit-scrollbar-thumb:hover { background-color: var(--text-muted); }

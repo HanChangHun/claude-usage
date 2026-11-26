@@ -340,6 +340,18 @@ $('updateDismiss').addEventListener('click', () => {
   $('updateBanner').classList.add('hidden');
 });
 
+// ---------- Scrollbar visibility ----------
+// Keep the native scrollbar visible briefly for keyboard and programmatic scrolls.
+{
+  const scroller = document.querySelector('.usage-content');
+  let hideTimer;
+  scroller.addEventListener('scroll', () => {
+    scroller.classList.add('is-scrolling');
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => scroller.classList.remove('is-scrolling'), 1000);
+  }, { passive: true });
+}
+
 // ---------- init ----------
 setInterval(tickCountdowns, 30_000);
 initCodex({ renderRow });
