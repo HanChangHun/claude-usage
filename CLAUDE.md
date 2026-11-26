@@ -49,7 +49,7 @@ The release is a manual local build+sign+publish (no CI). Signing config lives i
    cd app
    .\release.ps1 -Notes "What changed in this release"
    ```
-   This builds + signs the installer (`Claude Usage_X.Y.Z_x64-setup.exe`), copies it to `app/installers/` as `claude-usage_X.Y.Z_x64-setup.exe` + `.sig`, and writes `app/installers/latest.json` (UTF-8 **without BOM**, signature read straight from the `.sig`). `release.ps1` expands `$HOME` in the `.env` key path, so either `$HOME\.tauri\...` or an absolute path works.
+   This builds + signs the installer (`Claude Usage_X.Y.Z_x64-setup.exe`), copies it to `app/installers/` as `claude-usage_X.Y.Z_x64-setup.exe` + `.sig`, and writes `app/installers/latest.json` (UTF-8 **without BOM**, signature read straight from the `.sig`). `release.ps1` expands `$HOME` in the `.env` key path, so either `$HOME\.tauri\...` or an absolute path works. It runs Tauri with `--ci`, so an empty `TAURI_SIGNING_PRIVATE_KEY_PASSWORD=` works without a password prompt in Windows PowerShell as well as PowerShell 7.
 
 3. **Commit + tag + push:**
    ```bash

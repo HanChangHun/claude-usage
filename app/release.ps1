@@ -86,7 +86,9 @@ try {
     Write-Output "Password set: $(if ($env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD) { 'yes' } else { 'no (key has no password)' })"
     Write-Output ""
 
-    npm run tauri build
+    # Windows PowerShell drops empty environment values. In CI mode Tauri
+    # uses an empty password without prompting when the key has no password.
+    npm run tauri build -- --ci
     $buildExit = $LASTEXITCODE
 } finally {
     Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY, Env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD -ErrorAction SilentlyContinue
