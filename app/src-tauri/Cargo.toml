@@ -1,6 +1,6 @@
 [package]
 name = "claude-usage-app"
-version = "0.4.12"
+version = "0.4.13"
 description = "Claude.ai quota widget — desktop"
 authors = ["Han Changhun"]
 edition = "2021"
