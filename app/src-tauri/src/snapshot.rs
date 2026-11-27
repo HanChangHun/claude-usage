@@ -3,7 +3,7 @@
 //! frontend renders them, so an agent sees exactly what the widget shows.
 //! Account emails are deliberately never stored here.
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::sync::{Mutex, OnceLock};
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
@@ -57,7 +57,7 @@ pub enum Status {
     Disabled,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Window {
     pub id: String,
     pub label: String,

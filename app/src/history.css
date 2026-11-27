@@ -1,0 +1,54 @@
+html:has(> .history-page) { height: auto; min-height: 100%; overflow: auto; }
+.history-page { height: auto; min-height: 100vh; overflow: visible; user-select: text; }
+.history-app { max-width: 1200px; margin: auto; padding: 24px 28px; }
+.history-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 22px; }
+.history-header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+.history-header p { color: var(--text-muted); font-size: 12px; margin-top: 5px; }
+.history-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.segmented { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; padding: 3px; gap: 3px; background: var(--bg-sunk); }
+.segmented button { font: inherit; font-size: 12px; color: var(--text-muted); background: transparent; border: 0; border-radius: 5px; padding: 7px 12px; cursor: pointer; white-space: nowrap; }
+.segmented button[aria-pressed="true"] { color: var(--text); background: var(--border); }
+.history-select { color: var(--text-muted); font-size: 11px; display: flex; align-items: center; gap: 7px; }
+.history-select:last-child { margin-left: auto; }
+.history-select select { font: inherit; font-size: 12px; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 8px; max-width: 210px; }
+.history-stats { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 20px; padding: 26px 0; }
+.history-stats span { font-size: 11px; color: var(--text-muted); }
+.history-stats strong { display: block; font-size: 30px; font-weight: 600; letter-spacing: -1px; margin: 6px 0; font-variant-numeric: tabular-nums; }
+.history-stats small { display: block; font-size: 10px; color: var(--text-muted); line-height: 1.5; }
+.history-chart-card { padding: 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
+.history-chart-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.history-chart-heading h2 { font-size: 13px; font-weight: 500; }
+.history-plot { position: relative; margin-top: 18px; }
+#historyChart { display: block; width: 100%; overflow: visible; }
+#historyChart text { fill: var(--text-muted); font-size: 11px; font-family: inherit; }
+.chart-grid { stroke: var(--border); stroke-width: 1; }
+.chart-line { fill: none; stroke: var(--accent); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.chart-point, .chart-bar { fill: var(--accent); }
+.history-page[data-provider="codex"] { --accent: #B5B9DF; }
+.chart-cursor { stroke: var(--text-muted); stroke-width: 1; stroke-dasharray: 3 4; }
+.chart-selected { fill: var(--text); stroke: var(--card); stroke-width: 2; }
+.history-empty { position: absolute; inset: 10px 40px 30px 52px; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--text-muted); background: var(--card); font-size: 13px; line-height: 1.65; }
+#historyScrubber { width: 100%; accent-color: var(--accent); margin: 8px 0; height: 12px; }
+.history-detail { min-height: 36px; font-size: 11px; color: var(--text-muted); line-height: 1.6; font-variant-numeric: tabular-nums; }
+.history-notes { padding-top: 16px; font-size: 11px; line-height: 1.6; color: var(--text-muted); }
+.history-notes p + p { margin-top: 6px; }
+.history-warning { margin-top: 12px; color: var(--warn); font-size: 12px; }
+.history-page :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 650px) {
+  .history-app { padding: 18px; }
+  .history-header { margin-bottom: 16px; }
+  .history-controls { gap: 8px; }
+  .history-select:last-child { margin-left: 0; }
+  .history-select select { max-width: 175px; }
+  .history-stats { gap: 12px; padding: 20px 0; }
+  .history-stats strong { font-size: 25px; }
+  .history-chart-card { padding: 12px; }
+  #historyChart text { font-size: 18px; }
+}
+@media (forced-colors: active) {
+  .chart-line, .chart-cursor { stroke: CanvasText; }
+  .chart-grid { stroke: GrayText; }
+  .chart-point, .chart-bar, .chart-selected { fill: Highlight; }
+  #historyChart text { fill: CanvasText; }
+  .segmented button[aria-pressed="true"] { border: 1px solid Highlight; }
+}

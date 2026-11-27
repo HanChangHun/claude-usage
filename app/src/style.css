@@ -422,6 +422,8 @@ html, body {
 }
 .kofi-btn svg { width: 12px; height: 12px; }
 .kofi-btn:hover { color: var(--accent-strong); }
+.history-btn { border-color: transparent; color: var(--text-faint); }
+.settings-meta .kofi-btn { margin-right: auto; }
 
 /* ---------- Sign-in bar ---------- */
 /* Shown when the session drops after data has rendered — the empty-state

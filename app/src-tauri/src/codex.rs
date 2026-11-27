@@ -193,7 +193,18 @@ pub async fn read_codex_usage() -> Result<Usage, String> {
     let result = query().await;
     let now = crate::now_ms();
     match &result {
-        Ok(usage) => snapshot::record_ok(Provider::Codex, usage.windows(), usage.plan(), None, now),
+        Ok(usage) => {
+            let windows = usage.windows();
+            if snapshot::current()[1].status != Status::Disabled {
+                crate::history::record(
+                    "codex",
+                    usage.account.as_ref().and_then(|a| a.email.as_deref()),
+                    &windows,
+                    now,
+                );
+            }
+            snapshot::record_ok(Provider::Codex, windows, usage.plan(), None, now);
+        }
         Err(message) => {
             snapshot::record_failure(Provider::Codex, Status::Error, message.clone(), now)
         }

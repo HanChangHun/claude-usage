@@ -3,6 +3,7 @@ mod alt_tab;
 mod claude_account;
 pub mod cli;
 mod codex;
+mod history;
 mod local_api;
 mod policy;
 mod snapshot;
@@ -125,6 +126,7 @@ pub fn run() {
             app.manage(SessionGeneration(AtomicU64::new(0)));
             app.manage(LastLoginPopup(AtomicI64::new(0)));
             app.manage(OrgState(Mutex::new(OrgIds::default())));
+            history::init(app.path().app_local_data_dir()?);
 
             // ---- Main widget window ----
             // Built hidden: the window-state plugin restores the saved geometry
@@ -276,6 +278,8 @@ pub fn run() {
             _ => {}
         })
         .invoke_handler(tauri::generate_handler![
+            open_usage_history,
+            history::read_usage_history,
             codex::read_codex_usage,
             local_api::set_local_api,
             set_provider_tracking,
@@ -293,6 +297,22 @@ pub fn run() {
 #[tauri::command]
 async fn manual_refresh(app: AppHandle) {
     fetch_usage(&app, false).await;
+}
+
+#[tauri::command]
+async fn open_usage_history(app: AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("history") {
+        window.unminimize().map_err(|e| e.to_string())?;
+        window.show().map_err(|e| e.to_string())?;
+        return window.set_focus().map_err(|e| e.to_string());
+    }
+    WebviewWindowBuilder::new(&app, "history", WebviewUrl::App("history.html".into()))
+        .title("Usage history")
+        .inner_size(920.0, 640.0)
+        .min_inner_size(540.0, 420.0)
+        .build()
+        .map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 /// The widget reports which optional providers are switched on, so the
@@ -666,9 +686,15 @@ async fn fetch_usage(app: &AppHandle, from_poll: bool) {
                                 org.rejected = None;
                             }
                         }
+                        let windows = snapshot::claude_windows(&json);
+                        let identity = account
+                            .as_ref()
+                            .and_then(|a| a.email())
+                            .map(|email| format!("{org_id}:{email}"));
+                        history::record("claude", identity.as_deref(), &windows, now_ms());
                         snapshot::record_ok(
                             snapshot::Provider::Claude,
-                            snapshot::claude_windows(&json),
+                            windows,
                             account.as_ref().and_then(|a| a.plan()),
                             snapshot::claude_extra_usage(&json),
                             now_ms(),

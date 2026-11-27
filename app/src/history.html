@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usage history</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="history.css">
+</head>
+<body class="history-page">
+  <main class="history-app">
+    <header class="history-header">
+      <div><h1>Usage history</h1><p>Account quota over time</p></div>
+      <button class="settings-btn" id="historyRefresh" type="button">Refresh</button>
+    </header>
+    <div class="history-controls">
+      <div class="segmented" aria-label="Provider">
+        <button type="button" data-provider="claude" aria-pressed="true">Claude</button>
+        <button type="button" data-provider="codex" aria-pressed="false">Codex</button>
+      </div>
+      <label class="history-select">Limit <select id="historyLimit" aria-label="Quota window"></select></label>
+      <label class="history-select">Range <select id="historyRange" aria-label="History range">
+        <option value="6">Past 6 hours</option><option value="24" selected>Past 24 hours</option>
+        <option value="168">7 days</option><option value="720">30 days</option><option value="2160">90 days</option>
+      </select></label>
+    </div>
+    <p class="history-warning hidden" id="historyWarning" role="status"></p>
+    <section class="history-stats" aria-label="Recorded usage">
+      <div><span>Latest recorded</span><strong id="historyLatest">—</strong><small id="historyLastTime">Waiting for a reading</small></div>
+      <div><span>Observed rise</span><strong id="historyRise">—</strong><small>Percentage points · excludes gaps and resets</small></div>
+      <div><span>Readings</span><strong id="historyCount">0</strong><small>One successful reading every 5 minutes</small></div>
+    </section>
+    <section class="history-chart-card">
+      <div class="history-chart-heading">
+        <h2 id="historyChartTitle">Quota used (%)</h2>
+        <div class="segmented" aria-label="Chart metric">
+          <button type="button" data-mode="usage" aria-pressed="true">Usage %</button>
+          <button type="button" data-mode="change" aria-pressed="false">Change</button>
+        </div>
+      </div>
+      <div class="history-plot" id="historyPlot">
+        <svg id="historyChart" viewBox="0 0 820 260" role="img" aria-label="Recorded quota usage over time"></svg>
+        <div class="history-empty hidden" id="historyEmpty" role="status"></div>
+      </div>
+      <input type="range" id="historyScrubber" min="0" max="0" value="0" aria-label="Inspect a recorded reading" disabled>
+      <div class="history-detail" id="historyDetail" aria-live="polite">Move over the chart or use the slider to inspect a reading.</div>
+    </section>
+    <footer class="history-notes">
+      <p>Recorded locally while the app is running, including in the tray. Keeps 90 days. Codex recording follows “Show Codex usage”.</p>
+      <p>Shared-account totals include everyone’s usage. Compare timestamps with your own sessions; this chart cannot identify who used the quota.</p>
+      <p>Breaks mark missing readings, quota resets, account changes, or app restarts. No readings are filled in while the app or PC is off. Times use this PC’s time zone.</p>
+    </footer>
+  </main>
+  <script type="module" src="history.js"></script>
+</body>
+</html>

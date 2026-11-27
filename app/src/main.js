@@ -290,6 +290,11 @@ $('signinBarBtn').addEventListener('click', async () => {
 });
 
 // Settings toggle visibility
+$('historyBtn').addEventListener('click', async () => {
+  try { await core.invoke('open_usage_history'); }
+  catch (error) { showSettingsStatus(`Could not open history: ${error}`, 'error'); }
+});
+
 $('settingsBtn').addEventListener('click', () => {
   const panel = $('settingsPanel');
   panel.classList.toggle('hidden');

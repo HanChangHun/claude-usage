@@ -57,3 +57,13 @@ Windows. It reuses the `toggle` and `codex-help` primitives; the helper line is
 an aria-live status that shows the listening URL, or the error in `--crit`.
 Default off, persisted locally. It adds no usage rows, no new controls on the
 default screen, and no theme changes.
+
+Usage history opens from a quiet three-bar icon at the bottom of Settings.
+Keep the compact widget geometry unchanged. The separate history window uses
+the same dark palette, with orange Claude and muted lavender Codex charts.
+Use actual five-minute observations, a stepped percentage line, and optional
+percentage-point change bars. Never smooth, backfill, join different account
+segments, or count a quota reset as consumption. Exact local timestamps must be
+available through both pointer inspection and a keyboard-accessible slider.
+Shared-account attribution is not inferred. Identity remains in memory; stored
+history contains only quota rows, times, provider names, and opaque segments.

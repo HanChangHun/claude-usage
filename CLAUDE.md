@@ -30,6 +30,15 @@ npm run tauri build    # release installer -> src-tauri/target/release/bundle/ns
 
 Unit tests: `cd app/src-tauri && cargo test --lib`. Requires Rust 1.95+, Node 20+, and Visual Studio Build Tools 2022 with the **Desktop development with C++** workload. There is no frontend build — edit `app/src/*` directly.
 
+Quota history lives in `src-tauri/src/history.rs` and `src/history*`. Successful
+polls append one local observation in each five-minute bucket; no additional API
+calls. Daily JSONL files are kept for about 90 days. In-memory identities only
+separate opaque recording segments and are never written to disk. The history
+window has its own capability file and opens from Settings. Test chart semantics
+with `node scripts/history.test.mjs` from the repo root. For headless UI checks,
+run `node scripts/verify-history-ui.mjs` with an existing Playwright installation
+(`PLAYWRIGHT_MODULE`) and Chromium (`CHROMIUM_PATH`); nothing is installed.
+
 The app is single-instance (`tauri-plugin-single-instance`, registered first in the builder): a second launch exits immediately and focuses the running one. Dev and release builds share the same identifier, so quit the installed copy from the tray before `npm run tauri dev`, or the dev build will just focus it and exit. Window size/position persist via `tauri-plugin-window-state` in `%APPDATA%\io.github.hanchanghun.claude-usage\.window-state.json`; delete that file to reset. The installer is per-user (`%LOCALAPPDATA%\Claude Usage`, no admin prompt); the updater's temp folders `%TEMP%\Claude Usage-*-updater-*` are swept at launch.
 
 ## Releasing

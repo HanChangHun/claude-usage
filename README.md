@@ -53,6 +53,27 @@ Gear icon, top right:
 - **📥 GitHub Releases Only** — Updater talks to one endpoint and nothing else.
 - **🎯 Silent Install** — Installs per-user, no admin prompt. After the first install, future versions land on the next launch — no more re-installs.
 
+### Usage history
+
+Open Settings and click the small three-bar icon at the bottom. A separate window
+shows Claude and enabled Codex quota history, with a limit selector and ranges
+from 6 hours to 90 days. Switch between usage percentage and the increase in
+percentage points; hover or use the slider for exact local timestamps.
+
+The existing minute-by-minute refresh supplies one successful reading in each
+five-minute interval. There are no extra provider requests. Recording continues
+in the tray and survives restarts, with about 90 days of local daily files in
+`%LOCALAPPDATA%\io.github.hanchanghun.claude-usage\usage-history-v1\`.
+No emails, credentials, prompts, or conversation history are saved there.
+
+These are account-wide quota readings, including other people on a shared account.
+Compare their timestamps with your own sessions to see rises during idle periods;
+the app cannot attribute consumption to a person or convert tokens into quota.
+Missing readings, resets, account changes, and app restarts break the chart line.
+The app does not backfill time when it or the PC was off. “Observed rise” sums only
+comparable increases and is not a complete consumption total. Historical account
+segments have no identity labels. History starts after installing this version.
+
 ---
 
 ## ⬇️ Install (Windows)
