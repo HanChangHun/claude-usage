@@ -152,27 +152,15 @@ Windows native CLI and standard npm installations are discovered automatically;
 for a custom install, set `CODEX_USAGE_CLI` to the native `codex.exe` path before
 launching the widget. Missing windows are shown as unavailable, not 0%.
 
-## Optional Antigravity usage
+## Antigravity usage (removed in v0.5.1)
 
-Enable **Settings → Show Antigravity usage** to add Antigravity (`agy`) Gemini
-subscription limits to the widget. It shows **Gemini session (5h)** and
-**Gemini weekly** used percentages with reset countdowns in the same style as
-Claude and Codex, and omits the third-party Claude and GPT pool. Turning the
-option off clears displayed rows and stops polling.
-
-Install the Antigravity CLI (`agy`) and sign in with your Google account once.
-The widget reuses your existing `agy` login with no separate browser sign-in or
-API key. When enabled, it follows the shared 60-second background refresh and
-updates immediately on the top refresh button or tray Refresh now alongside
-Claude and Codex.
-
-The backend runs `agy --print /usage --output-format json` with
-`AGY_CLI_DISABLE_AUTO_UPDATE=true` and a 30-second timeout. It uses zero model
-turns and zero tokens, reads only quota buckets, and leaves account credentials
-under `agy` control. `agy.exe` is discovered from `PATH` and standard local
-install folders. For a custom path, set `ANTIGRAVITY_USAGE_CLI` before launching
-the widget. Note that Google's consumer terms restrict heavy automated polling
-on personal OAuth sessions, so this provider stays off by default.
+Versions 0.4.x–0.5.0 could show Antigravity (`agy`) Gemini limits by running
+`agy --print /usage` in the background. Google's Antigravity FAQ says headless
+`agy -p` is meant for direct scripting and CI, and that wrapping `agy` inside
+third-party apps is not supported on consumer plans and can lead to account
+suspension. Even a read-only quota check falls under that, so v0.5.1 removes the
+feature and never runs `agy`. The Local API still reports an `antigravity` entry
+with status `disabled` so existing scripts keep working.
 
 ## Local API & CLI (for scripts and agents)
 
@@ -199,7 +187,7 @@ claude-usage-app help
 
 `recommend` walks `--prefer` in order (default `claude,codex`) and picks the first
 provider that is **not** at or above its ceiling (`--max-used`, default 90; per
-provider with `--max-used-claude|codex|antigravity`). A provider whose quota is
+provider with `--max-used-claude|codex`). A provider whose quota is
 unknown (not tracked, signed out, or older than `--max-age` seconds, default 600)
 keeps its place, and the answer reports `"confident": false`. With
 `--claude-model opus`, Claude per-model weekly limits for other models are ignored;
@@ -215,5 +203,5 @@ agents, Git Bash). In an interactive PowerShell window, pipe it
 Safety: the server binds to 127.0.0.1 only, accepts only `GET`, rejects requests
 whose `Host` is not the loopback address (DNS rebinding) and any browser request
 (`Origin` / cross-site `Sec-Fetch-Site`), sends no CORS headers, never includes
-account emails, and rate-limits `refresh` to once every 15 seconds. Codex and
-Antigravity numbers are present only while their own toggles are on.
+account emails, and rate-limits `refresh` to once every 15 seconds. Codex numbers
+are present only while its toggle is on.

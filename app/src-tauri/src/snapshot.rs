@@ -10,6 +10,11 @@ use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 pub const SCHEMA_VERSION: u32 = 1;
 
+/// Antigravity usage was read with `agy --print /usage`, which Google's
+/// Antigravity terms do not allow third-party apps to run on consumer plans.
+/// The provider stays in the snapshot so API consumers keep a stable shape.
+pub const ANTIGRAVITY_REMOVED: &str = "Removed in v0.5.1: Google's Antigravity terms do not allow third-party apps to run agy -p, so the widget no longer reads Antigravity usage.";
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Provider {
     Claude,
@@ -147,10 +152,12 @@ fn store() -> &'static Mutex<[ProviderState; 3]> {
     // Claude is always tracked; the optional providers report in once the
     // frontend has read their Settings toggles.
     STORE.get_or_init(|| {
+        let mut antigravity = ProviderState::new(Status::Disabled);
+        antigravity.message = Some(ANTIGRAVITY_REMOVED.to_string());
         Mutex::new([
             ProviderState::new(Status::Pending),
             ProviderState::new(Status::Disabled),
-            ProviderState::new(Status::Disabled),
+            antigravity,
         ])
     })
 }
@@ -471,6 +478,17 @@ mod tests {
         assert_eq!(json["status"], "ok");
         assert_eq!(json["windows"][0]["used_percent"], 40.0);
         assert!(json.get("extra_usage").is_none());
+    }
+
+    #[test]
+    fn antigravity_is_always_reported_as_removed() {
+        let states = current();
+        let antigravity = &states[Provider::Antigravity.index()];
+        assert_eq!(antigravity.status, Status::Disabled);
+        assert_eq!(antigravity.message.as_deref(), Some(ANTIGRAVITY_REMOVED));
+        let view = provider_view(antigravity, 0);
+        assert!(!view.tracked);
+        assert!(view.windows.is_empty());
     }
 
     #[test]

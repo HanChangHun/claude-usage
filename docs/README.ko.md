@@ -152,13 +152,9 @@ API 키를 입력할 필요가 없습니다. API 키 로그인만으로는 구�
 
 계정 이메일과 요금제는 설정 버튼을 눌렀을 때만 표시됩니다. Claude는 이 위젯에 로그인한 claude.ai 계정을, Codex는 Codex CLI에 로그인한 ChatGPT 계정을 사용합니다. 계정 정보는 사용량과 함께 새로 고침되며 디스크에 저장하지 않습니다.
 
-## Antigravity 한도 추가 기능
+## Antigravity 한도 표시 (v0.5.1에서 제거)
 
-**설정 → Show Antigravity usage**를 켜면 Antigravity(`agy`)의 **Gemini session (5h)**과 **Gemini weekly** 사용률, 초기화 카운트다운이 표시됩니다. 서드파티 Claude/GPT 모델 풀은 생략합니다. 기본값은 꺼짐이며, 끄면 표시된 행을 지우고 조회를 멈춥니다.
-
-Antigravity CLI(`agy`)를 설치하고 Google 계정으로 한 번 로그인해 두면 기존 CLI 로그인을 그대로 재사용합니다. 기능을 켜면 Claude, Codex와 같은 60초 백그라운드 주기로 자동 갱신되며, 상단 새로고침 버튼이나 트레이의 Refresh now를 누르면 즉시 다시 가져옵니다.
-
-백엔드는 `AGY_CLI_DISABLE_AUTO_UPDATE=true` 환경 변수와 함께 `agy --print /usage --output-format json`을 30초 제한 시간으로 호출합니다. 모델 턴과 토큰을 소모하지 않고 한도 버킷만 읽으며, 실행 파일은 `PATH`와 기본 로컬 설치 경로(`%LOCALAPPDATA%\agy\bin\agy.exe` 등)에서 자동으로 찾습니다. 별도 경로를 쓰려면 `ANTIGRAVITY_USAGE_CLI` 환경 변수를 지정해 주세요. 개인 OAuth 계정의 잦은 자동 폴링은 Google 약관 제한 대상이 될 수 있어 기본 비활성 상태로 제공합니다.
+0.4.x~0.5.0은 백그라운드에서 `agy --print /usage`를 실행해 Antigravity(`agy`)의 Gemini 한도를 보여 주었습니다. Google의 Antigravity FAQ는 헤드리스 `agy -p`를 사용자가 직접 쓰는 스크립트와 CI용으로 두고, 개인 플랜에서 제3자 앱이 `agy`를 감싸 쓰는 것은 지원하지 않으며 계정 정지로 이어질 수 있다고 적고 있습니다. 읽기 전용 한도 조회도 여기에 해당하므로, v0.5.1은 이 기능을 지우고 `agy`를 실행하지 않습니다. 로컬 API는 기존 스크립트가 깨지지 않도록 `antigravity` 항목을 `disabled` 상태로 계속 돌려줍니다.
 
 ## 로컬 API와 CLI (스크립트·에이전트용)
 
@@ -179,8 +175,8 @@ claude-usage-app recommend --prefer claude,codex --max-used 90 --max-used-codex 
 claude-usage-app help
 ```
 
-`recommend`는 `--prefer` 순서(기본 `claude,codex`)대로 보면서 상한(`--max-used`, 기본 90, 서비스별로 `--max-used-claude|codex|antigravity`) **이상이 아닌** 첫 서비스를 고릅니다. 사용량을 알 수 없는 서비스(추적 꺼짐, 로그아웃, `--max-age`초보다 오래된 값, 기본 600초)는 순서를 유지하되 `"confident": false`로 알려 줍니다. `--claude-model opus`를 주면 다른 모델의 Claude 모델별 주간 한도는 무시하고, 세션과 전체 모델 주간 한도는 항상 반영합니다. 기본 출력은 stdout에 서비스 이름, stderr에 이유입니다. 종료 코드는 `0` 선택됨, `3` 모든 후보가 상한 도달(`retry_at`에 가장 빠른 초기화 시각), `2` 위젯 미실행 또는 API 꺼짐입니다.
+`recommend`는 `--prefer` 순서(기본 `claude,codex`)대로 보면서 상한(`--max-used`, 기본 90, 서비스별로 `--max-used-claude|codex`) **이상이 아닌** 첫 서비스를 고릅니다. 사용량을 알 수 없는 서비스(추적 꺼짐, 로그아웃, `--max-age`초보다 오래된 값, 기본 600초)는 순서를 유지하되 `"confident": false`로 알려 줍니다. `--claude-model opus`를 주면 다른 모델의 Claude 모델별 주간 한도는 무시하고, 세션과 전체 모델 주간 한도는 항상 반영합니다. 기본 출력은 stdout에 서비스 이름, stderr에 이유입니다. 종료 코드는 `0` 선택됨, `3` 모든 후보가 상한 도달(`retry_at`에 가장 빠른 초기화 시각), `2` 위젯 미실행 또는 API 꺼짐입니다.
 
 CLI는 GUI 실행 파일에 들어 있으므로 출력이 캡처되는 환경(스크립트, 에이전트, Git Bash)에서 쓰는 것이 좋습니다. 대화형 PowerShell에서는 `claude-usage-app usage | Out-String`처럼 파이프로 실행해 주세요.
 
-보안: 127.0.0.1에만 바인딩하고, `GET`만 받으며, `Host`가 루프백이 아닌 요청(DNS 리바인딩)과 브라우저 요청(`Origin`, 교차 사이트 `Sec-Fetch-Site`)을 거부합니다. CORS 헤더를 보내지 않고, 계정 이메일을 포함하지 않으며, `refresh`는 15초에 한 번으로 제한합니다. Codex와 Antigravity 값은 각 토글이 켜져 있을 때만 포함됩니다.
+보안: 127.0.0.1에만 바인딩하고, `GET`만 받으며, `Host`가 루프백이 아닌 요청(DNS 리바인딩)과 브라우저 요청(`Origin`, 교차 사이트 `Sec-Fetch-Site`)을 거부합니다. CORS 헤더를 보내지 않고, 계정 이메일을 포함하지 않으며, `refresh`는 15초에 한 번으로 제한합니다. Codex 값은 토글이 켜져 있을 때만 포함됩니다.

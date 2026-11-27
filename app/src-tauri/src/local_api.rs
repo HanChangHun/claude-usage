@@ -345,8 +345,8 @@ async fn refresh(app: &AppHandle) {
     {
         return;
     }
-    // Claude is read here; Codex/Antigravity are read by the widget in
-    // response to the refresh events this also emits.
+    // Claude is read here; Codex is read by the widget in response to the
+    // refresh event this also emits. Antigravity is no longer read (v0.5.1).
     crate::fetch_usage(app, false).await;
     let deadline = tokio::time::Instant::now() + REFRESH_WAIT;
     while tokio::time::Instant::now() < deadline {

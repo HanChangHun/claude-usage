@@ -1,6 +1,5 @@
 #[cfg(target_os = "windows")]
 mod alt_tab;
-mod antigravity;
 mod claude_account;
 pub mod cli;
 mod codex;
@@ -277,7 +276,6 @@ pub fn run() {
             _ => {}
         })
         .invoke_handler(tauri::generate_handler![
-            antigravity::read_antigravity_usage,
             codex::read_codex_usage,
             local_api::set_local_api,
             set_provider_tracking,
@@ -302,7 +300,7 @@ async fn manual_refresh(app: AppHandle) {
 #[tauri::command]
 fn set_provider_tracking(provider: String, enabled: bool) -> Result<(), String> {
     match snapshot::Provider::parse(&provider) {
-        Some(p @ (snapshot::Provider::Codex | snapshot::Provider::Antigravity)) => {
+        Some(p @ snapshot::Provider::Codex) => {
             snapshot::set_tracked(p, enabled);
             Ok(())
         }
@@ -564,7 +562,6 @@ fn reject_org_id(app: &AppHandle, org_id: &str) {
 async fn fetch_usage(app: &AppHandle, from_poll: bool) {
     let generation = app.state::<SessionGeneration>().0.load(Ordering::SeqCst);
     let _ = app.emit_to("main", "codex-refresh", ());
-    let _ = app.emit_to("main", "antigravity-refresh", ());
     let claude = match app.get_webview_window("claude") {
         Some(w) => w,
         None => return,

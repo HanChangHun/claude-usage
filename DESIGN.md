@@ -48,17 +48,11 @@ as its quota. Refresh identity with usage; clear it on sign-out, errors, or disa
 An unavailable profile must not prevent quota display or imply a guessed plan.
 Emails are rendered as text, kept in memory, and never persisted or logged.
 
-Antigravity is an optional section below Codex in the scrollable usage area,
-enabled in Settings (default off, persisted locally). It reuses the same row
-components, spacing, error status pattern, and short-window behavior. It shares
-the 60-second background refresh signal and manual/tray refresh with Claude and
-Codex. Show only reported Gemini 5-hour and weekly limits (used percentage
-converted from remaining fraction, omitting Unix epoch placeholder reset times)
-and omit the third-party Claude and GPT model pool. Because
-`agy --print /usage --output-format json` does not report account email or plan,
-omit an Antigravity account line rather than guessing.
+The Antigravity section was removed in v0.5.1: reading its quota required running
+`agy --print /usage`, which Google's terms do not allow third-party apps to run on
+consumer plans. Do not add it back through `agy`.
 
-The Local API toggle sits after the Antigravity toggle and before Start with
+The Local API toggle sits after the Codex toggle and before Start with
 Windows. It reuses the `toggle` and `codex-help` primitives; the helper line is
 an aria-live status that shows the listening URL, or the error in `--crit`.
 Default off, persisted locally. It adds no usage rows, no new controls on the
