@@ -35,6 +35,10 @@ export async function initCodex({ renderRow }) {
   let enabled = localStorage.getItem('codex-usage-enabled') === 'true';
   let generation = 0;
   let inFlight = false;
+  // Tell the local API whether Codex is tracked ("disabled" vs. "pending").
+  const track = on => window.__TAURI__.core
+    .invoke('set_provider_tracking', { provider: 'codex', enabled: on })
+    .catch(error => console.warn('codex tracking', error));
 
   async function refresh() {
     if (!enabled || inFlight) return;
@@ -70,6 +74,7 @@ export async function initCodex({ renderRow }) {
     enabled = toggle.checked;
     generation += 1;
     localStorage.setItem('codex-usage-enabled', String(enabled));
+    void track(enabled);
     get('codexSection').classList.toggle('hidden', !enabled);
     account.replaceChildren();
     rows.replaceChildren();
@@ -79,6 +84,7 @@ export async function initCodex({ renderRow }) {
     const panel = get('settingsPanel');
     if (!panel.classList.contains('hidden')) panel.scrollIntoView({ block: 'nearest' });
   });
+  await track(enabled);
   await window.__TAURI__.event.listen('codex-refresh', refresh);
   void refresh();
 }

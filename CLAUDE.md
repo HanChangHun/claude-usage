@@ -13,6 +13,7 @@ Guidance for AI assistants (and humans) working in this repo. Keep it short and 
   - `app/src-tauri/src/lib.rs` — Rust backend: the 60-second quota poll loop, the hidden claude.ai webview (cookie host + sign-in surface), the system tray, window creation (incl. `min_inner_size`), and the `#[tauri::command]`s the frontend invokes.
   - The main widget defaults to 440×420 and can shrink to 300×180. `app/src/style.css` tightens controls and quota rows below 261px high; extra rows and settings stay inside the scrollable content area.
   - `app/src-tauri/src/alt_tab.rs` keeps the main widget out of Alt+Tab and the taskbar with `ITaskbarList::DeleteTab` and a hidden owner window, while preserving FancyZones eligibility. Its Windows subclass handles show/hide, pin changes, Explorer recovery, and teardown. The existing SIZE | POSITION window-state policy restores geometry before showing the widget. The external `claude` sign-in window is not changed.
+  - `app/src-tauri/src/snapshot.rs` holds the latest normalized rows per provider (same labels as the frontend; no emails). `local_api.rs` serves it read-only on 127.0.0.1 (default port 47615, opt-in via the Settings toggle in `app/src/local-api.js`; Host/Origin checks, GET only). `policy.rs` implements `/v1/recommend`. `cli.rs` makes `claude-usage-app usage|recommend|api|help` a client of that API; `main.rs` dispatches to it before Tauri starts, so unknown arguments still launch the widget. Codex/Antigravity rows reach the snapshot through their existing `read_*_usage` commands, and the frontend reports their toggles with `set_provider_tracking`.
   - `app/src-tauri/tauri.conf.json` — Tauri config, including the updater endpoint + **public** signing key.
   - `app/src-tauri/capabilities/default.json` — the permission allowlist for the main window.
 - **`index.html` (repo root) + `assets/`** — the marketing/landing page. **Not** the app UI — don't confuse it with `app/src/index.html`.
@@ -27,7 +28,7 @@ npm run tauri dev      # run locally
 npm run tauri build    # release installer -> src-tauri/target/release/bundle/nsis/
 ```
 
-Requires Rust 1.95+, Node 20+, and Visual Studio Build Tools 2022 with the **Desktop development with C++** workload. There is no frontend build — edit `app/src/*` directly.
+Unit tests: `cd app/src-tauri && cargo test --lib`. Requires Rust 1.95+, Node 20+, and Visual Studio Build Tools 2022 with the **Desktop development with C++** workload. There is no frontend build — edit `app/src/*` directly.
 
 The app is single-instance (`tauri-plugin-single-instance`, registered first in the builder): a second launch exits immediately and focuses the running one. Dev and release builds share the same identifier, so quit the installed copy from the tray before `npm run tauri dev`, or the dev build will just focus it and exit. Window size/position persist via `tauri-plugin-window-state` in `%APPDATA%\io.github.hanchanghun.claude-usage\.window-state.json`; delete that file to reset. The installer is per-user (`%LOCALAPPDATA%\Claude Usage`, no admin prompt); the updater's temp folders `%TEMP%\Claude Usage-*-updater-*` are swept at launch.
 

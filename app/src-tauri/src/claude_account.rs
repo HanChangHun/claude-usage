@@ -7,6 +7,13 @@ pub struct Account {
     plan: Option<String>,
 }
 
+impl Account {
+    /// The plan only; the email never leaves the widget's memory.
+    pub fn plan(&self) -> Option<String> {
+        self.plan.clone()
+    }
+}
+
 #[derive(Deserialize)]
 struct Profile {
     email_address: Option<String>,

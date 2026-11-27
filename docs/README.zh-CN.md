@@ -134,3 +134,11 @@ MIT © 2026 Han Changhun
 开启 **Settings → Show Antigravity usage** 即可在小工具中显示 Antigravity (`agy`) 的 **Gemini session (5h)** 与 **Gemini weekly** 已用百分比和重置倒计时，忽略第三方 Claude/GPT 模型池。默认关闭，关闭后清除显示并停止轮询。
 
 先安装 Antigravity CLI (`agy`) 并使用 Google 账号登录一次，小工具直接复用现有 CLI 登录，无需单独登录。开启后与 Claude、Codex 共享每 60 秒自动刷新，点击顶部刷新或托盘 Refresh now 会立即刷新。后端使用 `AGY_CLI_DISABLE_AUTO_UPDATE=true` 调用 `agy --print /usage --output-format json`（不消耗模型轮次或 Token），如需自定义路径可设置环境变量 `ANTIGRAVITY_USAGE_CLI`。
+
+## 本地 API 与 CLI（供脚本和智能体使用）
+
+在 **设置 → Local API (CLI & agents)** 中开启后（默认关闭），应用会在 `http://127.0.0.1:47615`（端口被占用时改用空闲端口，实际端口显示在开关下方并写入 `%LOCALAPPDATA%\io.github.hanchanghun.claude-usage\local-api.json`）提供只读 JSON API：`GET /v1/usage`（各服务的状态、套餐与限额窗口，`?refresh=1` 先重新读取）、`GET /v1/recommend`（按偏好顺序与用量上限选择下一个服务）、`GET /v1/health`。
+
+已安装的 `claude-usage-app.exe` 同时也是该 API 的命令行客户端：`claude-usage-app usage`、`claude-usage-app usage --json --refresh`、`claude-usage-app recommend --prefer claude,codex --max-used 90 --claude-model opus`、`claude-usage-app help`。退出码：`0` 已选出服务，`3` 所有候选均已达上限，`2` 应用未运行或 API 未开启。
+
+服务仅绑定 127.0.0.1，只接受 `GET`，拒绝非回环 `Host`（DNS 重绑定）和浏览器请求，不发送 CORS 头，不包含账户邮箱，`refresh` 每 15 秒最多一次。

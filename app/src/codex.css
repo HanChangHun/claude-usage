@@ -6,6 +6,8 @@
 .codex-status[data-state="error"] { color: var(--crit); }
 .codex-rows { display: flex; flex-direction: column; gap: 1.1rem; } /* same row spacing as .widget */
 .codex-help { font-size: 0.74rem; }
+.local-api-help { overflow-wrap: anywhere; }
+.local-api-help[data-state="error"] { color: var(--crit); }
 .usage-content .settings { overflow: visible; }
 .usage-content:has(.codex-section:not(.hidden)) .empty { padding: 1rem 0.5rem; }
 .topbar, .bottombar { flex-shrink: 0; }

@@ -1,3 +1,4 @@
+use crate::snapshot::{self, Provider, Status};
 use serde::{Deserialize, Serialize};
 use std::{ffi::OsString, path::PathBuf, process::Stdio, time::Duration};
 use tokio::{
@@ -33,6 +34,53 @@ pub struct Bucket {
     pub window: Option<String>,
     pub remaining_fraction: f64,
     pub reset_time: Option<String>,
+}
+
+// Same rows as `antigravityLimits()` in `app/src/antigravity.js`: only the
+// Gemini group's 5-hour and weekly buckets; the third-party pool is omitted.
+const WINDOWS: [(&str, &str, &str, u64); 2] = [
+    ("5h", "session", "Gemini session (5h)", 300),
+    ("weekly", "weekly", "Gemini weekly", 10_080),
+];
+
+impl Usage {
+    pub fn windows(&self) -> Vec<snapshot::Window> {
+        let is_gemini = |g: &&Group| {
+            g.name.to_ascii_lowercase().contains("gemini")
+                || g.buckets.iter().any(|b| {
+                    b.id.as_deref()
+                        .is_some_and(|id| id.to_ascii_lowercase().starts_with("gemini-"))
+                })
+        };
+        let Some(group) = self.groups.iter().find(is_gemini) else {
+            return Vec::new();
+        };
+        WINDOWS
+            .iter()
+            .filter_map(|(key, id, label, minutes)| {
+                let bucket = group.buckets.iter().find(|b| {
+                    b.window
+                        .as_deref()
+                        .is_some_and(|w| w.trim().eq_ignore_ascii_case(key))
+                })?;
+                let remaining = bucket.remaining_fraction.clamp(0.0, 1.0);
+                Some(snapshot::Window {
+                    id: id.to_string(),
+                    label: label.to_string(),
+                    used_percent: (1.0 - remaining) * 100.0,
+                    window_minutes: Some(*minutes),
+                    // agy reports the Unix epoch for a window that hasn't started.
+                    resets_at: bucket
+                        .reset_time
+                        .as_deref()
+                        .and_then(snapshot::parse_rfc3339_ms)
+                        .filter(|ms| *ms > 86_400_000)
+                        .and_then(snapshot::rfc3339_from_ms),
+                    model: None,
+                })
+            })
+            .collect()
+    }
 }
 
 #[derive(Deserialize)]
@@ -225,6 +273,18 @@ pub async fn read_antigravity_usage() -> Result<Usage, String> {
     let _guard = QUERY
         .try_lock()
         .map_err(|_| "An Antigravity refresh is already running.".to_string())?;
+    let result = query().await;
+    let now = crate::now_ms();
+    match &result {
+        Ok(usage) => snapshot::record_ok(Provider::Antigravity, usage.windows(), None, None, now),
+        Err(message) => {
+            snapshot::record_failure(Provider::Antigravity, Status::Error, message.clone(), now)
+        }
+    }
+    result
+}
+
+async fn query() -> Result<Usage, String> {
     let mut command = Command::new(executable()?);
     command
         .args(["--print", "/usage", "--output-format", "json"])
@@ -325,6 +385,22 @@ mod tests {
             usage.groups[0].buckets[1].reset_time.as_deref(),
             Some("2026-11-26T06:14:34Z")
         );
+    }
+
+    #[test]
+    fn gemini_rows_like_the_widget() {
+        let rows = parse_usage(SAMPLE_JSON).unwrap().windows();
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[0].id, "session");
+        assert_eq!(rows[0].label, "Gemini session (5h)");
+        assert!((rows[0].used_percent - 17.09).abs() < 1e-6);
+        assert_eq!(rows[0].resets_at.as_deref(), Some("2026-11-26T06:14:34Z"));
+        assert_eq!(rows[1].id, "weekly");
+        let epoch =
+            parse_usage(&SAMPLE_JSON.replace("2026-12-03T01:14:34Z", "1970-01-01T00:00:00Z"))
+                .unwrap()
+                .windows();
+        assert_eq!(epoch[1].resets_at, None);
     }
 
     #[test]

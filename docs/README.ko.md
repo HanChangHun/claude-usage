@@ -159,3 +159,28 @@ API 키를 입력할 필요가 없습니다. API 키 로그인만으로는 구�
 Antigravity CLI(`agy`)를 설치하고 Google 계정으로 한 번 로그인해 두면 기존 CLI 로그인을 그대로 재사용합니다. 기능을 켜면 Claude, Codex와 같은 60초 백그라운드 주기로 자동 갱신되며, 상단 새로고침 버튼이나 트레이의 Refresh now를 누르면 즉시 다시 가져옵니다.
 
 백엔드는 `AGY_CLI_DISABLE_AUTO_UPDATE=true` 환경 변수와 함께 `agy --print /usage --output-format json`을 30초 제한 시간으로 호출합니다. 모델 턴과 토큰을 소모하지 않고 한도 버킷만 읽으며, 실행 파일은 `PATH`와 기본 로컬 설치 경로(`%LOCALAPPDATA%\agy\bin\agy.exe` 등)에서 자동으로 찾습니다. 별도 경로를 쓰려면 `ANTIGRAVITY_USAGE_CLI` 환경 변수를 지정해 주세요. 개인 OAuth 계정의 잦은 자동 폴링은 Google 약관 제한 대상이 될 수 있어 기본 비활성 상태로 제공합니다.
+
+## 로컬 API와 CLI (스크립트·에이전트용)
+
+**설정 → Local API (CLI & agents)**를 켜면 위젯에 보이는 사용량을 로컬 도구가 그대로 읽을 수 있습니다. 기본값은 꺼짐입니다. 켜져 있는 동안 앱이 `http://127.0.0.1:47615`에서 읽기 전용 JSON API를 제공합니다. 이 포트를 쓸 수 없으면 빈 포트를 사용하며, 실제 포트는 토글 아래와 `%LOCALAPPDATA%\io.github.hanchanghun.claude-usage\local-api.json`에 표시됩니다.
+
+| 엔드포인트 | 내용 |
+|---|---|
+| `GET /v1/usage` | 서비스별 상태, 요금제, 갱신 경과 시간, 한도 창(`used_percent`, `resets_at`, `resets_in_seconds`). `?refresh=1`이면 먼저 모두 다시 읽습니다. |
+| `GET /v1/recommend` | 선호 순서와 사용률 상한으로 다음에 쓸 서비스를 고릅니다. |
+| `GET /v1/health` | 동작 여부와 앱 버전. |
+
+설치된 `claude-usage-app.exe`는 이 API의 CLI로도 동작합니다.
+
+```bash
+claude-usage-app usage                 # 사람이 읽는 요약
+claude-usage-app usage --json --refresh
+claude-usage-app recommend --prefer claude,codex --max-used 90 --max-used-codex 80 --claude-model opus
+claude-usage-app help
+```
+
+`recommend`는 `--prefer` 순서(기본 `claude,codex`)대로 보면서 상한(`--max-used`, 기본 90, 서비스별로 `--max-used-claude|codex|antigravity`) **이상이 아닌** 첫 서비스를 고릅니다. 사용량을 알 수 없는 서비스(추적 꺼짐, 로그아웃, `--max-age`초보다 오래된 값, 기본 600초)는 순서를 유지하되 `"confident": false`로 알려 줍니다. `--claude-model opus`를 주면 다른 모델의 Claude 모델별 주간 한도는 무시하고, 세션과 전체 모델 주간 한도는 항상 반영합니다. 기본 출력은 stdout에 서비스 이름, stderr에 이유입니다. 종료 코드는 `0` 선택됨, `3` 모든 후보가 상한 도달(`retry_at`에 가장 빠른 초기화 시각), `2` 위젯 미실행 또는 API 꺼짐입니다.
+
+CLI는 GUI 실행 파일에 들어 있으므로 출력이 캡처되는 환경(스크립트, 에이전트, Git Bash)에서 쓰는 것이 좋습니다. 대화형 PowerShell에서는 `claude-usage-app usage | Out-String`처럼 파이프로 실행해 주세요.
+
+보안: 127.0.0.1에만 바인딩하고, `GET`만 받으며, `Host`가 루프백이 아닌 요청(DNS 리바인딩)과 브라우저 요청(`Origin`, 교차 사이트 `Sec-Fetch-Site`)을 거부합니다. CORS 헤더를 보내지 않고, 계정 이메일을 포함하지 않으며, `refresh`는 15초에 한 번으로 제한합니다. Codex와 Antigravity 값은 각 토글이 켜져 있을 때만 포함됩니다.

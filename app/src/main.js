@@ -3,6 +3,7 @@
 
 import { initAntigravity } from './antigravity.js';
 import { initCodex } from './codex.js';
+import { initLocalApi } from './local-api.js';
 import { renderAccount } from './account.js';
 
 const { event, core } = window.__TAURI__;
@@ -356,6 +357,7 @@ $('updateDismiss').addEventListener('click', () => {
 setInterval(tickCountdowns, 30_000);
 initCodex({ renderRow });
 initAntigravity({ renderRow });
+initLocalApi();
 
 // Initial autostart state sync (without showing the panel)
 syncAutostartToggle();

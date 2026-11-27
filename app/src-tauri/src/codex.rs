@@ -1,3 +1,4 @@
+use crate::snapshot::{self, Provider, Status};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{collections::BTreeMap, path::PathBuf, process::Stdio, time::Duration};
 use tokio::{
@@ -24,6 +25,59 @@ struct Account {
     kind: String,
     email: Option<String>,
     plan_type: Option<String>,
+}
+
+// Same rows as `codexLimits()` in `app/src/codex.js`: the 5-hour session
+// window when the plan reports one, then the weekly window. Spark is omitted.
+const WINDOWS: [(u64, &str, &str); 2] = [
+    (300, "session", "Codex session (5h)"),
+    (10_080, "weekly", "Codex weekly"),
+];
+
+impl Usage {
+    pub fn windows(&self) -> Vec<snapshot::Window> {
+        let bucket = match &self.rate_limits_by_limit_id {
+            None => self.rate_limits.as_ref(),
+            Some(by_id) => by_id.get("codex"),
+        };
+        let Some(bucket) = bucket else {
+            return Vec::new();
+        };
+        if bucket
+            .limit_id
+            .as_deref()
+            .is_some_and(|id| !id.is_empty() && id != "codex")
+        {
+            return Vec::new();
+        }
+        let reported: Vec<&Window> = [&bucket.primary, &bucket.secondary]
+            .into_iter()
+            .flatten()
+            .filter(|w| w.used_percent.is_finite())
+            .collect();
+        WINDOWS
+            .iter()
+            .filter_map(|(minutes, id, label)| {
+                let w = reported
+                    .iter()
+                    .find(|w| w.window_duration_mins == Some(*minutes))?;
+                Some(snapshot::Window {
+                    id: id.to_string(),
+                    label: label.to_string(),
+                    used_percent: w.used_percent.clamp(0.0, 100.0),
+                    window_minutes: Some(*minutes),
+                    resets_at: w
+                        .resets_at
+                        .and_then(|secs| snapshot::rfc3339_from_ms(secs.saturating_mul(1000))),
+                    model: None,
+                })
+            })
+            .collect()
+    }
+
+    fn plan(&self) -> Option<String> {
+        self.account.as_ref()?.plan_type.clone()
+    }
 }
 
 #[derive(Deserialize)]
@@ -136,6 +190,18 @@ pub async fn read_codex_usage() -> Result<Usage, String> {
     let _guard = QUERY
         .try_lock()
         .map_err(|_| "A Codex refresh is already running.".to_string())?;
+    let result = query().await;
+    let now = crate::now_ms();
+    match &result {
+        Ok(usage) => snapshot::record_ok(Provider::Codex, usage.windows(), usage.plan(), None, now),
+        Err(message) => {
+            snapshot::record_failure(Provider::Codex, Status::Error, message.clone(), now)
+        }
+    }
+    result
+}
+
+async fn query() -> Result<Usage, String> {
     let mut command = Command::new(executable()?);
     command
         .arg("app-server")
@@ -184,4 +250,44 @@ pub async fn read_codex_usage() -> Result<Usage, String> {
     .await;
     let _ = child.kill().await;
     result.map_err(|_| "Codex refresh timed out. Check your connection and retry.".to_string())?
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn usage(json: &str) -> Usage {
+        serde_json::from_str(json).expect("sample should parse")
+    }
+
+    #[test]
+    fn session_and_weekly_rows_like_the_widget() {
+        let u = usage(
+            r#"{"rateLimits":null,"rateLimitsByLimitId":{
+                "codex":{"limitId":"codex","primary":{"usedPercent":12.5,"windowDurationMins":300,"resetsAt":1795755600},
+                         "secondary":{"usedPercent":40,"windowDurationMins":10080,"resetsAt":null}},
+                "codex_spark":{"limitId":"codex_spark","primary":{"usedPercent":99,"windowDurationMins":300}}}}"#,
+        );
+        let rows = u.windows();
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[0].id, "session");
+        assert_eq!(rows[0].label, "Codex session (5h)");
+        assert_eq!(rows[0].resets_at.as_deref(), Some("2026-11-27T05:00:00Z"));
+        assert_eq!(rows[1].id, "weekly");
+        assert_eq!(rows[1].used_percent, 40.0);
+        assert_eq!(rows[1].resets_at, None);
+    }
+
+    #[test]
+    fn weekly_only_plans_and_foreign_buckets() {
+        let weekly_only = usage(
+            r#"{"rateLimits":{"limitId":"codex","primary":{"usedPercent":5,"windowDurationMins":10080}}}"#,
+        );
+        let ids: Vec<_> = weekly_only.windows().into_iter().map(|w| w.id).collect();
+        assert_eq!(ids, ["weekly"]);
+        let other = usage(
+            r#"{"rateLimits":{"limitId":"codex_spark","primary":{"usedPercent":5,"windowDurationMins":10080}}}"#,
+        );
+        assert!(other.windows().is_empty());
+    }
 }

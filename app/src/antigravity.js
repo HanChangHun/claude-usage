@@ -48,6 +48,10 @@ export async function initAntigravity({ renderRow }) {
   let enabled = localStorage.getItem(STORAGE_KEY) === 'true';
   let generation = 0;
   let inFlight = false;
+  // Tell the local API whether Antigravity is tracked ("disabled" vs. "pending").
+  const track = on => window.__TAURI__.core
+    .invoke('set_provider_tracking', { provider: 'antigravity', enabled: on })
+    .catch(error => console.warn('antigravity tracking', error));
 
   async function refresh() {
     if (!enabled || inFlight) return;
@@ -81,6 +85,7 @@ export async function initAntigravity({ renderRow }) {
     enabled = toggle.checked;
     generation += 1;
     localStorage.setItem(STORAGE_KEY, String(enabled));
+    void track(enabled);
     section.classList.toggle('hidden', !enabled);
     rows.replaceChildren();
     status.textContent = '';
@@ -88,6 +93,7 @@ export async function initAntigravity({ renderRow }) {
     status.dataset.state = '';
     if (enabled) void refresh();
   });
+  await track(enabled);
   await window.__TAURI__.event.listen('antigravity-refresh', refresh);
   if (enabled) void refresh();
 }

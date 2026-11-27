@@ -2,7 +2,11 @@
 mod alt_tab;
 mod antigravity;
 mod claude_account;
+pub mod cli;
 mod codex;
+mod local_api;
+mod policy;
+mod snapshot;
 
 use serde::Serialize;
 use std::sync::atomic::{AtomicI64, AtomicU32, AtomicU64, Ordering};
@@ -275,6 +279,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             antigravity::read_antigravity_usage,
             codex::read_codex_usage,
+            local_api::set_local_api,
+            set_provider_tracking,
             manual_refresh,
             open_login,
             sign_out_cmd,
@@ -289,6 +295,19 @@ pub fn run() {
 #[tauri::command]
 async fn manual_refresh(app: AppHandle) {
     fetch_usage(&app, false).await;
+}
+
+/// The widget reports which optional providers are switched on, so the
+/// local API can tell "not tracked" apart from "no answer yet".
+#[tauri::command]
+fn set_provider_tracking(provider: String, enabled: bool) -> Result<(), String> {
+    match snapshot::Provider::parse(&provider) {
+        Some(p @ (snapshot::Provider::Codex | snapshot::Provider::Antigravity)) => {
+            snapshot::set_tracked(p, enabled);
+            Ok(())
+        }
+        _ => Err(format!("unknown optional provider '{provider}'")),
+    }
 }
 
 #[tauri::command]
@@ -403,6 +422,19 @@ fn sign_out(app: AppHandle) {
 }
 
 fn emit_status(app: &AppHandle, state: &str, message: Option<String>) {
+    let failure = match state {
+        "logged_out" => Some(snapshot::Status::LoggedOut),
+        "error" => Some(snapshot::Status::Error),
+        _ => None,
+    };
+    if let Some(status) = failure {
+        snapshot::record_failure(
+            snapshot::Provider::Claude,
+            status,
+            message.clone().unwrap_or_else(|| state.replace('_', " ")),
+            now_ms(),
+        );
+    }
     let _ = app.emit(
         "status",
         StatusEvent {
@@ -637,6 +669,13 @@ async fn fetch_usage(app: &AppHandle, from_poll: bool) {
                                 org.rejected = None;
                             }
                         }
+                        snapshot::record_ok(
+                            snapshot::Provider::Claude,
+                            snapshot::claude_windows(&json),
+                            account.as_ref().and_then(|a| a.plan()),
+                            snapshot::claude_extra_usage(&json),
+                            now_ms(),
+                        );
                         let _ = app.emit(
                             "usage-update",
                             UsageEvent {

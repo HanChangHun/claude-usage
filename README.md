@@ -95,6 +95,7 @@ If the session really expires (three consecutive auth failures — transient bli
 - 🎯 **Same-Origin Only** — The app only calls two claude.ai API endpoints, the same ones claude.ai uses for itself: `/api/organizations` (org discovery when the cookie is absent) and `/api/organizations/<org>/usage`.
 - 🔐 **Signed Updates** — The auto-updater talks to GitHub Releases and verifies signatures before applying any binary.
 - 🚫 **No Telemetry** — No analytics, no third-party services, no tracking.
+- 🔌 **Opt-in Local API** — Off by default. When enabled it listens on 127.0.0.1 only, is read-only, and never exposes account emails.
 - 📖 **Open Source** — Code is fully public; audit anything you'd like.
 
 ---
@@ -172,3 +173,47 @@ under `agy` control. `agy.exe` is discovered from `PATH` and standard local
 install folders. For a custom path, set `ANTIGRAVITY_USAGE_CLI` before launching
 the widget. Note that Google's consumer terms restrict heavy automated polling
 on personal OAuth sessions, so this provider stays off by default.
+
+## Local API & CLI (for scripts and agents)
+
+Enable **Settings → Local API (CLI & agents)** to let local tools read the same
+numbers the widget shows. It is off by default. While it is on, the app serves a
+read-only JSON API on `http://127.0.0.1:47615` (another free port if that one is
+taken; the actual port is shown under the toggle and written to
+`%LOCALAPPDATA%\io.github.hanchanghun.claude-usage\local-api.json`).
+
+| Endpoint | Returns |
+|---|---|
+| `GET /v1/usage` | Every provider's status, plan, update age and limit windows (`used_percent`, `resets_at`, `resets_in_seconds`). `?refresh=1` re-reads all providers first. |
+| `GET /v1/recommend` | Which provider to use next, from a preference order and usage ceilings. |
+| `GET /v1/health` | Liveness and app version. |
+
+The installed `claude-usage-app.exe` doubles as a CLI client of that API:
+
+```bash
+claude-usage-app usage                 # readable summary
+claude-usage-app usage --json --refresh
+claude-usage-app recommend --prefer claude,codex --max-used 90 --max-used-codex 80 --claude-model opus
+claude-usage-app help
+```
+
+`recommend` walks `--prefer` in order (default `claude,codex`) and picks the first
+provider that is **not** at or above its ceiling (`--max-used`, default 90; per
+provider with `--max-used-claude|codex|antigravity`). A provider whose quota is
+unknown (not tracked, signed out, or older than `--max-age` seconds, default 600)
+keeps its place, and the answer reports `"confident": false`. With
+`--claude-model opus`, Claude per-model weekly limits for other models are ignored;
+the session and all-models weekly limits always count. Plain output is the
+provider name on stdout with the reason on stderr; exit code `0` = a provider was
+chosen, `3` = every preferred provider is at its limit (`retry_at` says when the
+first one resets), `2` = the widget is not running or the API is off.
+
+The CLI lives in the GUI executable, so run it where output is captured (scripts,
+agents, Git Bash). In an interactive PowerShell window, pipe it
+(`claude-usage-app usage | Out-String`) so PowerShell waits for the output.
+
+Safety: the server binds to 127.0.0.1 only, accepts only `GET`, rejects requests
+whose `Host` is not the loopback address (DNS rebinding) and any browser request
+(`Origin` / cross-site `Sec-Fetch-Site`), sends no CORS headers, never includes
+account emails, and rate-limits `refresh` to once every 15 seconds. Codex and
+Antigravity numbers are present only while their own toggles are on.

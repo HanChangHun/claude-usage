@@ -95,6 +95,14 @@
       <p class="codex-help">Uses your Antigravity CLI (agy) Google login. No separate widget sign-in.</p>
       <div class="settings-row">
         <label class="toggle">
+          <input type="checkbox" id="localApiToggle">
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">Local API (CLI &amp; agents)</span>
+        </label>
+      </div>
+      <p class="codex-help local-api-help" id="localApiHelp" role="status" aria-live="polite">Read-only usage on 127.0.0.1 for claude-usage-app usage and local tools.</p>
+      <div class="settings-row">
+        <label class="toggle">
           <input type="checkbox" id="autostartToggle">
           <span class="toggle-slider"></span>
           <span class="toggle-label">Start with Windows</span>

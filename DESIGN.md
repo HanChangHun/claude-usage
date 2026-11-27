@@ -57,3 +57,9 @@ converted from remaining fraction, omitting Unix epoch placeholder reset times)
 and omit the third-party Claude and GPT model pool. Because
 `agy --print /usage --output-format json` does not report account email or plan,
 omit an Antigravity account line rather than guessing.
+
+The Local API toggle sits after the Antigravity toggle and before Start with
+Windows. It reuses the `toggle` and `codex-help` primitives; the helper line is
+an aria-live status that shows the listening URL, or the error in `--crit`.
+Default off, persisted locally. It adds no usage rows, no new controls on the
+default screen, and no theme changes.
